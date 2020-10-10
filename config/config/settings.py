@@ -129,11 +129,11 @@ AUTH_USER_MODEL = 'users.User'
 
 CRISPY_TEMPLATE_PACK = 'bootstrap'
 
-PROJECT_ROOT = BASE_DIR
+PROJECT_ROOT = Path(__file__).parent
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.9/howto/static-files/
-STATIC_ROOT = os.path.join(PROJECT_ROOT, 'staticfiles')
+STATIC_ROOT = PROJECT_ROOT.joinpath('staticfiles')
 STATIC_URL = '/static/'
 
 # Extra places for collectstatic to find static files.
