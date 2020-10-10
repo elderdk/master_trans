@@ -129,7 +129,7 @@ AUTH_USER_MODEL = 'users.User'
 
 CRISPY_TEMPLATE_PACK = 'bootstrap'
 
-PROJECT_ROOT = Path(__file__).parent
+PROJECT_ROOT = BASE_DIR.parent
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.9/howto/static-files/
