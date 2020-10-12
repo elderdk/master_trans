@@ -21,8 +21,8 @@ class UserSignUpForm(UserCreationForm):
         model = User
         help_texts = {
             'username': None,
-            'password': None,
-            'email': None,
+            'password1': None,
+            'password2': None,
         }
 
     @transaction.atomic
