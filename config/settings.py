@@ -11,7 +11,7 @@ https://docs.djangoproject.com/en/3.1/ref/settings/
 """
 
 from pathlib import Path
-from decouple import config
+from decouple import config, Csv
 import dj_database_url
 import os
 
@@ -29,7 +29,7 @@ SECRET_KEY = config('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', default="True", cast=bool)
 
-ALLOWED_HOSTS = ['mastertrans.herokuapp.com']
+ALLOWED_HOSTS = config('ALLOWED_HOST', cast=Csv())
 
 
 # Application definition

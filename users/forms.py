@@ -19,6 +19,11 @@ class UserSignUpForm(UserCreationForm):
 
     class Meta(UserCreationForm.Meta):
         model = User
+        help_texts = {
+            'username': None,
+            'password': None,
+            'email': None,
+        }
 
     @transaction.atomic
     def save(self):
