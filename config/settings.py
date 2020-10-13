@@ -127,11 +127,9 @@ AUTH_USER_MODEL = 'users.User'
 
 CRISPY_TEMPLATE_PACK = 'bootstrap'
 
-PROJECT_ROOT = BASE_DIR
-
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.9/howto/static-files/
-STATIC_ROOT = PROJECT_ROOT.joinpath('static')
+STATIC_ROOT = BASE_DIR.joinpath('static')
 
 STATIC_URL = '/static/'
 
@@ -140,4 +138,4 @@ STATICFILES_DIRS = (
     PROJECT_ROOT.joinpath('staticfiles'),
 )
 
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
