@@ -135,7 +135,7 @@ STATIC_URL = '/static/'
 
 # Extra places for collectstatic to find static files.
 STATICFILES_DIRS = (
-    STATIC_ROOT.joinpath('staticfiles'),
+    BASE_DIR.joinpath('staticfiles'),
 )
 
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
