@@ -39,7 +39,10 @@ class File(models.Model):
                                 blank=True,
                                 null=True)
     file = models.FileField(blank=True, null=True)
-    phase = models.ManyToManyField(Phase)
+    phase = models.ForeignKey(Phase,
+                              on_delete=models.SET_NULL,
+                              blank=True,
+                              null=True)
 
     def __str__(self):
         return self.name
