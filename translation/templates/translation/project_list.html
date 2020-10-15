@@ -21,8 +21,10 @@
 	    <div id="collapseOne{{forloop.counter}}" class="collapse show" role="tabpanel" aria-labelledby="headingOne{{forloop.counter}}" data-parent="#accordion{{forloop.counter}}">
 	      <div class="card-body pt-1">
           <div class="row">
+          {% if user == project.user %}
           <a href={% url "project-update" project.pk %}><button type="button" class="btn btn-info btn-sm float-left mr-1">Update</button></a>
           <a href={% url "project-delete" project.pk %}><button type="button" class="btn btn-danger btn-sm float-left mr-1">Delete</button></a>
+          {% endif %}
         </div>
         <div class="row">
           FILE

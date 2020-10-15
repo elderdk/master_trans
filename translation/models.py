@@ -1,5 +1,5 @@
 from django.db import models
-from users.models import User
+from users.models import User, Client
 from django.urls import reverse
 
 
@@ -14,8 +14,9 @@ class Phase(models.Model):
 
 class Project(models.Model):
     name = models.CharField(max_length=200)
-    client = models.ForeignKey(User,
-                               on_delete=models.CASCADE,
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    client = models.ForeignKey(Client,
+                               on_delete=models.SET_NULL,
                                blank=True,
                                null=True)
     deadline = models.DateTimeField(blank=True, null=True)
