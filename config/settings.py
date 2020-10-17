@@ -143,3 +143,6 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 
 LOGIN_REDIRECT_URL = 'landing'
 LOGOUT_REDIRECT_URL = 'landing'
+
+MEDIA_ROOT = BASE_DIR.joinpath('media')
+MEDIA_URL = 'uploaded/'

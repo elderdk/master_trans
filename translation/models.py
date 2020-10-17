@@ -1,3 +1,5 @@
+import uuid
+
 from django.db import models
 from users.models import User, Client
 from django.urls import reverse
@@ -13,7 +15,7 @@ class Phase(models.Model):
 
 
 class Project(models.Model):
-    name = models.CharField(max_length=200)
+    name = models.CharField(max_length=200, verbose_name='Project Name')
     user = models.ForeignKey(User, 
                              on_delete=models.CASCADE,
                              blank=True,
@@ -32,8 +34,8 @@ class Project(models.Model):
 
 
 class File(models.Model):
-    name = models.CharField(max_length=200)
-    workers = models.ManyToManyField(User)
+    name = models.CharField(max_length=200, verbose_name='File(s)')
+    workers = models.ManyToManyField(User, blank=True)
     project = models.ForeignKey(Project,
                                 on_delete=models.CASCADE,
                                 blank=True,

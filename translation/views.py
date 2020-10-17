@@ -1,25 +1,56 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.urls import reverse_lazy
 from django.http import HttpResponse
-from django.views.generic import ListView, CreateView, DeleteView, UpdateView
+from django.views.generic import ListView, View, DeleteView, UpdateView
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib import messages
 
 from users.models import User
-from .models import Project
-from .forms import ProjectCreateForm
+from .models import Project, File
+from .forms import ProjectCreateForm, FileCreateForm
 
 
 # Create your views here.
 def display_landing(request):
     return render(request, 'landing.html')
 
-class ProjectListView(ListView):
+class ProjectListView(LoginRequiredMixin, ListView):
     model = Project
     context_object_name = "projects"
 
-class ProjectCreateView(LoginRequiredMixin, CreateView):
+
+class ProjectCreateView(LoginRequiredMixin, View):
     model = Project
-    form_class = ProjectCreateForm
+    form_classes = {'project': ProjectCreateForm,
+                    'files': FileCreateForm}
+    success_url = reverse_lazy('dashboard')
+    template_name = 'translation/project_form.html'
+
+    def get(self, request, *args, **kwargs):
+        form = self.form_classes
+        return render(request, self.template_name, {'form': form})
+    
+    def post(self, request, *args, **kwargs):
+        project_form = self.form_classes['project'](request.POST, instance=request.user)
+        files_form = self.form_classes['files'](request.POST, request.FILES)
+
+        if project_form.is_valid() and files_form.is_valid():
+            project_form.save()            
+
+            proj_name = project_form.cleaned_data.get('name')
+            files = request.FILES.getlist('file_field')
+
+            for file in files:
+                File.objects.create(
+                    name=file._name,
+                    file=file.file,
+                    project=Project.objects.get(name=proj_name)
+                )
+            return redirect(self.success_url)
+        else:
+            return render(request, self.template_name, {'form': form})
+
 
 class ProjectDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     model = Project
