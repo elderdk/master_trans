@@ -1,5 +1,3 @@
-import uuid
-
 from django.db import models
 from users.models import User, Client
 from django.urls import reverse
@@ -16,7 +14,7 @@ class Phase(models.Model):
 
 class Project(models.Model):
     name = models.CharField(max_length=200, verbose_name='Project Name')
-    user = models.ForeignKey(User, 
+    user = models.ForeignKey(User,
                              on_delete=models.CASCADE,
                              blank=True,
                              null=True)
@@ -25,7 +23,7 @@ class Project(models.Model):
                                blank=True,
                                null=True)
     deadline = models.DateTimeField(blank=True, null=True)
-    
+
     def __str__(self):
         return self.name
 
