@@ -6,6 +6,7 @@ from django.urls import reverse
 def get_file_path(instance, filename):
     return f"project_files/{instance.project.name}/{filename}"
 
+
 class Phase(models.Model):
     name = models.CharField(max_length=100)
     deadline = models.DateTimeField(blank=True, null=True)
@@ -42,7 +43,7 @@ class File(models.Model):
                                 null=True,
                                 related_name='files')
     file = models.FileField(upload_to=get_file_path,
-                            blank=True, 
+                            blank=True,
                             null=True)
 
     def __str__(self):
