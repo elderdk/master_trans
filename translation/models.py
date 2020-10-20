@@ -4,7 +4,7 @@ from django.urls import reverse
 
 
 def get_file_path(instance, filename):
-    return f"{instance.project.name}/{filename}"
+    return f"project_files/{instance.project.name}/{filename}"
 
 class Phase(models.Model):
     name = models.CharField(max_length=100)
