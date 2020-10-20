@@ -43,9 +43,6 @@ class ProjectCreateView(LoginRequiredMixin, View):
                 ])
 
             return redirect(self.success_url)
-        else:
-            # add error message template
-            return redirect('dashboard')
 
 
 class ProjectDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
