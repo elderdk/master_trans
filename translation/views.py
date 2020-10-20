@@ -47,7 +47,7 @@ class ProjectCreateView(LoginRequiredMixin, View):
             return redirect(self.success_url)
         else:
 
-            return HttpResponse(f"{project_form.is_valid()}, {files_form.is_valid()}")
+            return HttpResponse(f"{files_form}")
 
 
 class ProjectDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
