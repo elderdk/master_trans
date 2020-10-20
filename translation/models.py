@@ -3,7 +3,9 @@ from users.models import User, Client
 from django.urls import reverse
 
 
-# Create your models here.
+def get_file_path(instance, filename):
+    return f"{instance.project.name}/{filename}"
+
 class Phase(models.Model):
     name = models.CharField(max_length=100)
     deadline = models.DateTimeField(blank=True, null=True)
@@ -39,7 +41,9 @@ class File(models.Model):
                                 blank=True,
                                 null=True,
                                 related_name='files')
-    file = models.FileField(blank=True, null=True)
+    file = models.FileField(upload_to=get_file_path,
+                            blank=True, 
+                            null=True)
 
     def __str__(self):
         return self.name
