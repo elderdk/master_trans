@@ -131,14 +131,11 @@ CRISPY_TEMPLATE_PACK = 'bootstrap'
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.9/howto/static-files/
 STATIC_ROOT = BASE_DIR.joinpath('static')
-
-STATIC_URL = '/static/'
-
-# Extra places for collectstatic to find static files.
+STATIC_HOST = config('DJANGO_STATIC_HOST')
+STATIC_URL = STATIC_HOST + '/static/'
 STATICFILES_DIRS = (
     BASE_DIR.joinpath('staticfiles'),
 )
-
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 
 LOGIN_REDIRECT_URL = 'landing'
@@ -146,3 +143,4 @@ LOGOUT_REDIRECT_URL = 'landing'
 
 MEDIA_ROOT = BASE_DIR.joinpath('media')
 MEDIA_URL = 'uploaded/'
+

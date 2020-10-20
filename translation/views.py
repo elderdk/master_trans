@@ -38,7 +38,7 @@ class ProjectCreateView(LoginRequiredMixin, View):
             project = project_form.save(commit=False)
             project.user = request.user
             project_form.save()
-
+            
             File.objects.bulk_create([
                 File(name=fi.name, file=fi, project=project)
                 for fi in request.FILES.getlist('file_field')
