@@ -39,12 +39,9 @@ class File(models.Model):
     project = models.ForeignKey(Project,
                                 on_delete=models.CASCADE,
                                 blank=True,
-                                null=True)
+                                null=True,
+                                related_name='files')
     file = models.FileField(blank=True, null=True)
-    phase = models.ForeignKey(Phase,
-                              on_delete=models.SET_NULL,
-                              blank=True,
-                              null=True)
 
     def __str__(self):
         return self.name

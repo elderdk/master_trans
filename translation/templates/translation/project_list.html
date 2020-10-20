@@ -26,9 +26,17 @@
           <a href={% url "project-delete" project.pk %}><button type="button" class="btn btn-danger btn-sm float-left mr-1">Delete</button></a>
           {% endif %}
         </div>
-        <div class="row">
-          FILE
-        </div>
+        {% if project.files.all %}
+            {% for file in project.files.all %}
+          <div class="row mt-1">
+            {{ file.name }}
+          </div>
+        {% endfor %}
+        {% else %}
+        <div class="row mt-1"></div>
+          No files
+         </div>
+        {% endif %}
         </div>
           </div>
        </div>

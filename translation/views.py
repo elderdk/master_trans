@@ -32,21 +32,19 @@ class ProjectCreateView(LoginRequiredMixin, View):
         return render(request, self.template_name, {'form': form})
     
     def post(self, request, *args, **kwargs):
-        project_form = self.form_classes['project'](request.POST, instance=request.user)
+        project_form = self.form_classes['project'](request.POST)
         files_form = self.form_classes['files'](request.POST, request.FILES)
 
         if project_form.is_valid() and files_form.is_valid():
+            project = project_form.save(commit=False)
+            project.user = request.user
             project_form.save()            
 
-            proj_name = project_form.cleaned_data.get('name')
-            files = request.FILES.getlist('file_field')
-
-            for file in files:
-                File.objects.create(
-                    name=file._name,
-                    file=file.file,
-                    project=Project.objects.get(name=proj_name)
-                )
+            File.objects.bulk_create([
+                File(name=fi.name, file=fi, project=project)
+                for fi in request.FILES.getlist('file_field')
+                ])
+  
             return redirect(self.success_url)
         else:
             return render(request, self.template_name, {'form': form})
