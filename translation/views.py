@@ -6,6 +6,8 @@ from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from .models import Project, File
 from .forms import ProjectCreateForm, FileCreateForm
 
+from django.http import HttpResponse
+
 
 # Create your views here.
 def display_landing(request):
@@ -43,6 +45,8 @@ class ProjectCreateView(LoginRequiredMixin, View):
                 ])
 
             return redirect(self.success_url)
+        else:
+            return HttpResponse(project_form.is_valid(), files_form.is_valid())
 
 
 class ProjectDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
