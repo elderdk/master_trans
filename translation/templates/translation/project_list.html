@@ -30,6 +30,7 @@
             {% for file in project.files.all %}
           <div class="row mt-1">
             {{ file.name }}
+             <a href={% url "segmentize" project.pk file.id %}><button type="button" class="btn btn-info btn-sm segment-prepare">Prepare</button></a>
           </div>
         {% endfor %}
         {% else %}

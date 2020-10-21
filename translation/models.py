@@ -1,7 +1,7 @@
 from django.db import models
 from users.models import User, Client
 from django.urls import reverse
-from datetime import date
+from datetime import date, datetime
 
 
 def get_file_path(instance, filename):
@@ -42,7 +42,7 @@ class Project(models.Model):
         return reverse('dashboard')
 
 
-class File(models.Model):
+class ProjectFile(models.Model):
     name = models.CharField(max_length=200, verbose_name='File(s)')
     workers = models.ManyToManyField(User, blank=True)
     project = models.ForeignKey(Project,
@@ -56,3 +56,14 @@ class File(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class Segment(models.Model):
+    file = models.ForeignKey(ProjectFile, on_delete=models.CASCADE)
+    source = models.TextField()
+    target = models.TextField()
+    created_time = models.DateTimeField(auto_now_add=True)
+    modified_time = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.id.zfill(4)} | {self.source[20:]}"

@@ -147,10 +147,12 @@ LOGIN_REDIRECT_URL = 'landing'
 LOGOUT_REDIRECT_URL = 'landing'
 
 # Asset files
-MEDIA_URL = 'assets/'
+
 if DEBUG:
-    MEDIA_ROOT = 'media/'
+    MEDIA_URL = 'media/'
+    MEDIA_ROOT = '/media/'
 else:
+    MEDIA_URL = 'assets/'
     AWS_ACCESS_KEY_ID = config('AWS_ACCESS_KEY_ID')
     AWS_SECRET_ACCESS_KEY = config('AWS_SECRET_ACCESS_KEY')
     AWS_STORAGE_BUCKET_NAME = config('AWS_STORAGE_BUCKET_NAME')

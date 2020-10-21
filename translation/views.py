@@ -1,17 +1,35 @@
-from django.shortcuts import render, redirect
-from django.urls import reverse_lazy
-from django.views.generic import ListView, View, DeleteView, UpdateView
+import re
+from pathlib import Path
+
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-
-from .models import Project, File
-from .forms import ProjectCreateForm, FileCreateForm
-
 from django.http import HttpResponse
+from django.shortcuts import redirect, render
+from django.urls import reverse_lazy
+from django.views.generic import DeleteView, ListView, UpdateView, View
+
+from .forms import FileCreateForm, ProjectCreateForm
+from .models import Project, ProjectFile, Segment
 
 
 # Create your views here.
 def display_landing(request):
     return render(request, 'landing.html')
+
+
+def make_segments(text):
+    pattern = '(?:[.!? ]|^)([A-Z][^.!?\n]*[.!?])(?= |[A-Z]|$)'
+    sentences = re.findall(pattern, text)
+    return sentences
+
+
+def segment_prepare(request, prj_id, file_id):
+    project = Project.objects.get(pk=prj_id)
+    path_to_file = project.files.get(pk=file_id).file.path
+
+    with Path(path_to_file).open(mode='r') as f:
+        sentences = make_segments(f.read())
+
+    return HttpResponse(f"{sentences}")
 
 
 class ProjectListView(LoginRequiredMixin, ListView):
@@ -39,14 +57,14 @@ class ProjectCreateView(LoginRequiredMixin, View):
             project.user = request.user
             project_form.save()
             
-            File.objects.bulk_create([
-                File(name=fi.name, file=fi, project=project)
+            ProjectFile.objects.bulk_create([
+                ProjectFile(name=fi.name, file=fi, project=project)
                 for fi in request.FILES.getlist('file_field')
                 ])
 
             return redirect(self.success_url)
         else:
-
+            # Create an error httpresponse
             return HttpResponse(f"{files_form}")
 
 
