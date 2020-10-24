@@ -13,6 +13,6 @@ urlpatterns = [
     path('project/update/<int:pk>', views.ProjectUpdateView.as_view(),
          name='project-update'),
 
-    path('project/segment/<int:prj_id>/<int:file_id>', views.segment_prepare,
-         name='segmentize')
+    path('project/translate/<int:pk>', views.segment_translate_view,
+         name='segment-list')
 ]

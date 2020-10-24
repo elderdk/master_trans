@@ -94,20 +94,16 @@ DATABASES = {
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        'NAME': 'django.contrib.auth.password_validation\
-            .UserAttributeSimilarityValidator',
+        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'
     },
     {
-        'NAME': 'django.contrib.auth.password_validation\
-            .MinimumLengthValidator',
+        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'
     },
     {
-        'NAME': 'django.contrib.auth.password_validation\
-            .CommonPasswordValidator',
+        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
     },
     {
-        'NAME': 'django.contrib.auth.password_validation\
-            .NumericPasswordValidator',
+        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
 
@@ -150,7 +146,7 @@ LOGOUT_REDIRECT_URL = 'landing'
 
 if DEBUG:
     MEDIA_URL = 'media/'
-    MEDIA_ROOT = '/media/'
+    MEDIA_ROOT = 'media/'
 else:
     MEDIA_URL = 'assets/'
     AWS_ACCESS_KEY_ID = config('AWS_ACCESS_KEY_ID')

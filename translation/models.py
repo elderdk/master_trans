@@ -1,17 +1,20 @@
+import re
+import uuid
+
 from django.db import models
 from users.models import User, Client
 from django.urls import reverse
-from datetime import date, datetime
+from datetime import date
 
 
 def get_file_path(instance, filename):
-    return "{parent_folder}/{client}/{date}/{project_name}/{filename}".format(
-                                    parent_folder='project_files',
-                                    client=instance.project.client.name,
-                                    date=date.strftime(date.today(), '%Y%m'),
-                                    project_name=instance.project.name,
-                                    filename=filename
-                                )
+    project = instance.project
+    parent_folder = 'project_files'
+    client = project.client.name
+    today = date.strftime(date.today(), '%Y%m')
+    project_name = project.name
+    filename = filename
+    return f"{parent_folder}/{client}/{today}/{project_name}/{filename}"
 
 
 class Phase(models.Model):
@@ -58,12 +61,61 @@ class ProjectFile(models.Model):
         return self.name
 
 
+class SegmentManager(models.Manager):
+
+    def create_segments(self, fi):
+        with fi.file.open(mode='r') as f:
+            pattern = '(?:[.!? ]|^)([A-Z][^.!?\n]*[.!?])(?= |[A-Z]|$)'
+            sentences = re.findall(pattern, f.read())
+
+            num = 1
+            for sentence in sentences:
+                Segment.objects.create(
+                    file=fi,
+                    source=sentence,
+                    seg_id=num
+                )
+                num += 1
+
+
 class Segment(models.Model):
-    file = models.ForeignKey(ProjectFile, on_delete=models.CASCADE)
+    seg_id = models.IntegerField()
+    file = models.ForeignKey(
+        ProjectFile,
+        on_delete=models.CASCADE,
+        related_name='segments'
+        )
     source = models.TextField()
-    target = models.TextField()
+    target = models.TextField(blank=True, null=True)
     created_time = models.DateTimeField(auto_now_add=True)
     modified_time = models.DateTimeField(auto_now=True)
 
+    NOT_TRANSLATED = 'NT'
+    DRAFT = 'DR'
+    TRANSLATED = 'TR'
+    TRANSLATION_REJECTED = 'TJ'
+    REVIWED = 'RV'
+    REVIEW_REJECTED = 'RJ'
+    SIGNED_OFF = 'SO'
+    SIGN_OFF_REJECTED = 'SJ'
+
+    SEGMENT_STATUSES = [
+        (NOT_TRANSLATED, 'Not Translated'),
+        (DRAFT, 'Draft'),
+        (TRANSLATED, 'Translated'),
+        (TRANSLATION_REJECTED, 'Translation Rejected'),
+        (REVIWED, 'Reviewed'),
+        (REVIEW_REJECTED, 'Review Rejected'),
+        (SIGNED_OFF, 'Signed Off'),
+        (SIGN_OFF_REJECTED, 'Sign-off Rejected')
+    ]
+
+    status = models.CharField(max_length=2,
+                              choices=SEGMENT_STATUSES,
+                              default=NOT_TRANSLATED
+                              )
+
+    objects = SegmentManager()
+
     def __str__(self):
-        return f"{self.id.zfill(4)} | {self.source[20:]}"
+        return self.source
