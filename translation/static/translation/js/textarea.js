@@ -14,7 +14,8 @@ function autosize(){
     el.style.cssText = 'height:auto; padding:0';
     // for box-sizing other than "content-box" use:
     // el.style.cssText = '-moz-box-sizing:content-box';
-    el.style.cssText = 'height:' + el.scrollHeight + 'px';
+    height = el.scrollHeight + 5;
+    el.style.cssText = 'height:' + height + 'px';
   },0);
 }
 
@@ -23,6 +24,7 @@ function postloadautosize(el){
     el.style.cssText = 'height:auto; padding:0';
     // for box-sizing other than "content-box" use:
     // el.style.cssText = '-moz-box-sizing:content-box';
-    el.style.cssText = 'height:' + el.scrollHeight + 'px';
+    console.log(el.scrollHeight)
+    el.style.cssText = 'height:' + el.scrollHeight  + 'px';
   },0);
 }
