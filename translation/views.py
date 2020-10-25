@@ -1,3 +1,5 @@
+import json
+
 from django.http import HttpResponse
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
@@ -23,7 +25,20 @@ def segment_translate_view(request, pk):
         'translation/segment_list.html',
         {'segments': segments}
         )
-    
+
+
+def segment_commit_view(request, file_id, seg_id):
+
+    if request.method == 'POST':
+        print('post accepted')
+        projectfile = ProjectFile.objects.get(id=file_id)
+        segment = projectfile.segments.get(id=seg_id)
+        text = request.body.decode('utf-8')
+        segment.target = text
+        segment.status = 'TR'
+        segment.save()
+    return HttpResponse(status=200)
+
 
 class ProjectListView(LoginRequiredMixin, ListView):
     model = Project
