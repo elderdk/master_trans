@@ -1,3 +1,4 @@
+from django.http import HttpResponse
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.shortcuts import redirect, render
@@ -15,14 +16,14 @@ def display_landing(request):
 
 def segment_translate_view(request, pk):
     project_file = ProjectFile.objects.get(pk=pk)
-    
-    segments = project_file.segments.all()
+
+    segments = project_file.segments.all().order_by('seg_id')
     return render(
         request,
         'translation/segment_list.html',
         {'segments': segments}
         )
-
+    
 
 class ProjectListView(LoginRequiredMixin, ListView):
     model = Project
@@ -80,3 +81,4 @@ class ProjectUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     def test_func(self):
         obj = self.get_object()
         return self.request.user == obj.user
+    

@@ -4,20 +4,76 @@
 <link href={% static "translation/css/segment.css" %} rel="stylesheet" type="text/css">
 
 <div class="container-fluid mt-4">
-  {% for segment in segments %}
-    <div class="row justify-content-center">
-        <div class="col-xl-10">
-          <div class="row {% cycle 'row1' 'row2' %} my-1">
+  <div class="row">
+    <div class="col-xl-4 my-1 pl-2 pr-0">
+
+      <div class="row">
+        <div class="col-xl-12">
+          <div class="row">
+            <div class="col-xl-12 border">Information</div>
+          </div>
+            </div>
+      </div>
+      <div class="row">
+        <div class="col-xl-12">
+          <div class="row">
+            <div class="col-xl-12 border">Source text</div>
+          </div>
+            </div>
+      </div>
+      <div class="row">
+        <div class="col-xl-12">
+          <div class="row">
+            <div class="col-xl-12 border">Target text</div>
+          </div>
+            </div>
+      </div>
+
+    </div>
+    <div class="col-xl-8 p-0">
+      {% for segment in segments %}
+	    <div class="row justify-content-center">
+			  <div class="col-xl-11">
+            <div class="row {% cycle 'row1' 'row2' %} my-1">
             <div class="col-xl-1 border seg-id">{{ segment.seg_id }}</div>
             <div class="col-xl-5 border seg-source">{{ segment.source }}</div>
-            <div class="col-xl-1 border seg-status ">{{ segment.get_status_display }}</div>
-            <div class="col-xl-5 border seg-target p-0"><textarea>{% if segment.target %}{{ segment.target }}{% else %}{% endif %}</textarea></div>
-           </div>
-        </div>
-    </div>
-  {% endfor %}
+            <div class="col-xl-1 border small p-1 seg-status ">{{ segment.get_status_display }}</div>
+            <div class="col-xl-5 border p-1 seg-target"><textarea>{% if segment.target %}{{ segment.target }}{% else %}{% endif %}</textarea></div>
+			    </div>
+			   </div>
+      </div>
+      {% endfor %}
+	   </div>
   </div>
+</div>
 
+{% endblock %}
+
+{% block javascript %}
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
   <script src={% static "translation/js/textarea.js" %} type="text/javascript"></script>
+
+  <script type="text/javascript">
+    $(function(){
+      $("textarea").on("focus", function(){
+      
+        $.ajax({
+          'url' : 'localhost:8080/blah/blah/blah',
+          'type' : 'GET',
+          beforeSend: function() {
+             alert(1);
+          },
+          error: function() {
+             alert('Error');
+          },
+          'success' : function(data) {
+             if (data == "success") {
+                  alert('request sent!');
+             }
+          }
+        });
+    
+      });
+    });
+  </script>
 {% endblock %}

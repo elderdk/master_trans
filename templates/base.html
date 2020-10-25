@@ -42,7 +42,7 @@
   {% endif %}
 
   {% block content %}
-  {% endblock %}
+  {% endblock content %}
 	
   <!-- jQuery (necessary for Bootstrap's JavaScript plugins) --> 
 	<script src={% static "users/js/jquery-3.4.1.min.js" %}></script>
@@ -50,5 +50,7 @@
 	<!-- Include all compiled plugins (below), or include individual files as needed -->
 	<script src={% static "users/js/popper.min.js" %}></script> 
   <script src={% static "users/js/bootstrap-4.4.1.js" %}></script>
+  {% block javascript %}
+  {% endblock javascript %}
   </body>
 </html>
