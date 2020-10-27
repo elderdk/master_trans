@@ -3,11 +3,23 @@
 
 {% block content %}
 <div class="container mt-5 py-2 w-50 bg-dark text-white">
-    <form action="" method="post" enctype="multipart/form-data">
-      {% csrf_token %}
-      {{ form.project|crispy }}
-      {{ form.files|crispy }}
-      <button type="submit" class="btn btn-success mt-3">Confirm</button>
-    </form>
+  {% for message in messages %}
+  <div class="row">
+    <div class='col-xl-12'>
+      <li class="{{ message.tags }}">{{ message }}</li>
     </div>
+  </div>
+  {% endfor %}
+  <div class=row>
+    <div class="col-xl-12">
+      <form action="" method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ form.project|crispy }}
+        {{ form.files|crispy }}
+        <button type="submit" class="btn btn-success mt-3">Confirm</button>
+      </form>
+    </div>
+   </div>
+ </div>
+
 {% endblock content %}

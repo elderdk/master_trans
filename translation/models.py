@@ -25,15 +25,16 @@ class Phase(models.Model):
 
 
 class Project(models.Model):
-    name = models.CharField(max_length=200, verbose_name='Project Name')
+    name = models.CharField(max_length=200,
+                            blank=False,
+                            verbose_name='Project Name')
     user = models.ForeignKey(User,
                              on_delete=models.CASCADE,
-                             blank=True,
-                             null=True)
+                             )
     client = models.ForeignKey(Client,
                                on_delete=models.SET_NULL,
-                               blank=True,
                                null=True,
+                               blank=False,
                                related_name='client')
     deadline = models.DateTimeField(blank=True, null=True)
 

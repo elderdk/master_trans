@@ -5,7 +5,8 @@ from . import views
 urlpatterns = [
     path('', views.display_landing, name='landing'),
     path('dashboard/', views.ProjectListView.as_view(), name='dashboard'),
-    path('project/new', views.ProjectCreateView.as_view(), name='project-add'),
+    path('project/new', views.ProjectCreateView.as_view(),
+         name='project-create'),
 
     path('project/delete/<int:pk>', views.ProjectDeleteView.as_view(),
          name='project-delete'),
@@ -17,7 +18,7 @@ urlpatterns = [
          name='segment-list'),
 
     path('projcet/translate/commit/<int:file_id>/<int:seg_id>',
-         views.segment_commit_view, 
+         views.segment_commit_view,
          name='segment-commit'
          )
 
