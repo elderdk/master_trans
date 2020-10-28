@@ -33,13 +33,13 @@
 		    </ul>
       </div>
   </nav>
-  {% if messages %}
   {% for message in messages %}
-    <div class="alert alert-{{ message.tags }}">
-      {{ message }}
+  <div class="row">
+    <div class='col-xl-12'>
+      <li class="{{ message.tags }}">{{ message }}</li>
     </div>
+  </div>
   {% endfor %}
-  {% endif %}
 
   {% block content %}
   {% endblock content %}

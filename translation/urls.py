@@ -18,7 +18,7 @@ urlpatterns = [
          name='segment-list'),
 
     path('projcet/translate/commit/<int:file_id>/<int:seg_id>',
-         views.segment_commit_view,
+         views.SegmentCommitView.as_view(),
          name='segment-commit'
          )
 

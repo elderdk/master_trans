@@ -28,21 +28,27 @@ def segment_translate_view(request, pk):
         )
 
 
-@login_required
-def segment_commit_view(request, file_id, seg_id):
+class SegmentCommitView(LoginRequiredMixin, View):
+    http_method_names = ['post']
 
-    if request.method == 'POST':
-        print('post accepted')
+    def post(self, request, file_id, seg_id):
         projectfile = ProjectFile.objects.get(id=file_id)
         segment = projectfile.segments.get(id=seg_id)
         text = request.body.decode('utf-8')
         segment.target = text
         segment.status = 'TR'
         segment.save()
-        status = 201
-    else:
-        status = 400
-    return HttpResponse(status=status)
+        return HttpResponse('POST request')
+
+# def segment_commit_view(request, file_id, seg_id):
+
+#     if request.method == 'POST':
+#         print('post accepted')
+        
+#         status = 201
+#     else:
+#         status = 400
+#     return HttpResponse(status=status)
 
 
 class ProjectListView(LoginRequiredMixin, ListView):
@@ -94,7 +100,7 @@ class ProjectCreateView(LoginRequiredMixin, View):
                         ])
 
             for fi in files_created:
-                Segment.objects.create_segments(fi)
+                Segment.create_segments(fi)
 
             return redirect(self.success_url)
         else:

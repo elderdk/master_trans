@@ -61,9 +61,9 @@ class ProjectFile(models.Model):
         return self.name
 
 
-class SegmentManager(models.Manager):
+class Segment(models.Model):
 
-    def create_segments(self, fi):
+    def create_segments(fi):
         with fi.file.open(mode='r') as f:
             pattern = '(?:[.!? ]|^)([A-Z][^.!?\n]*[.!?])(?= |[A-Z]|$)'
             sentences = re.findall(pattern, f.read())
@@ -77,8 +77,6 @@ class SegmentManager(models.Manager):
                 )
                 num += 1
 
-
-class Segment(models.Model):
     seg_id = models.IntegerField()
     file = models.ForeignKey(
         ProjectFile,
@@ -114,8 +112,6 @@ class Segment(models.Model):
                               choices=SEGMENT_STATUSES,
                               default=NOT_TRANSLATED
                               )
-
-    objects = SegmentManager()
 
     def __str__(self):
         return self.source
