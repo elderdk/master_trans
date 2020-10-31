@@ -3,7 +3,7 @@ from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.shortcuts import redirect, render
 from django.urls import reverse_lazy
-from django.views.generic import DeleteView, ListView, UpdateView, View
+from django.views.generic import DeleteView, ListView, View
 from django.contrib.auth.decorators import login_required
 from django.conf import settings
 
@@ -146,7 +146,10 @@ class ProjectUpdateView(LoginRequiredMixin, UserPassesTestMixin, View):
                     return False
             return True
 
-        project_form = self.form_classes['project'](request.POST)
+        project = self.get_object()
+
+        project_form = self.form_classes['project'](request.POST,
+                                                    instance=project)
         files_form = self.form_classes['files'](request.POST, request.FILES)
 
         if project_form.is_valid() and files_form.is_valid():
