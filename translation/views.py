@@ -7,7 +7,7 @@ from django.views.generic import DeleteView, ListView, UpdateView, View
 from django.contrib.auth.decorators import login_required
 from django.conf import settings
 
-from .forms import FileCreateForm, ProjectCreateForm
+from .forms import FileCreateForm, ProjectCreateForm, ProjectUpdateForm
 from .models import Project, ProjectFile, Segment
 
 
@@ -39,16 +39,6 @@ class SegmentCommitView(LoginRequiredMixin, View):
         segment.status = 'TR'
         segment.save()
         return HttpResponse('POST request')
-
-# def segment_commit_view(request, file_id, seg_id):
-
-#     if request.method == 'POST':
-#         print('post accepted')
-        
-#         status = 201
-#     else:
-#         status = 400
-#     return HttpResponse(status=status)
 
 
 class ProjectListView(LoginRequiredMixin, ListView):
@@ -104,8 +94,6 @@ class ProjectCreateView(LoginRequiredMixin, View):
 
             return redirect(self.success_url)
         else:
-            # messages.error(request, 'error')
-            # messages.error(request, 'error')
             return redirect('project-create')
 
 
@@ -118,10 +106,68 @@ class ProjectDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
         return self.request.user == obj.user
 
 
-class ProjectUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+class ProjectUpdateView(LoginRequiredMixin, UserPassesTestMixin, View):
     model = Project
-    form_class = ProjectCreateForm
+    form_classes = {'project': ProjectUpdateForm,
+                    'files': FileCreateForm}
+    success_url = reverse_lazy('dashboard')
+    template_name = 'translation/project_update_form.html'
+    file_not_supported_msg = (
+        'Sorry. Your files include an extension '
+        'not currently supported.'
+        )
+
+    def get_object(self):
+        pk = self.kwargs.get('pk')
+        return self.model.objects.get(pk=pk)
 
     def test_func(self):
         obj = self.get_object()
         return self.request.user == obj.user
+
+    def get(self, request, *args, **kwargs):
+        project = self.get_object()
+        form_classes = {'project': ProjectUpdateForm(instance=project),
+                        'files': FileCreateForm}
+
+        form = form_classes
+        fis = project.files.all()
+
+        context = {'form': form, 'files': fis}
+
+        return render(request, self.template_name, context)
+
+    def post(self, request, *args, **kwargs):
+
+        def _is_all_supported(self, fi_list):
+            for fi in fi_list:
+                ext = fi.name.split('.')[-1]
+                if ext not in settings.SUPPORTED_FILE_TYPES:
+                    return False
+            return True
+
+        project_form = self.form_classes['project'](request.POST)
+        files_form = self.form_classes['files'](request.POST, request.FILES)
+
+        if project_form.is_valid() and files_form.is_valid():
+            project = project_form.save(commit=False)
+            project.user = request.user
+            fi_list = request.FILES.getlist('file_field')
+
+            if not _is_all_supported(self, fi_list):
+                messages.error(request, self.file_not_supported_msg)
+                return redirect('project-create')
+
+            project_form.save()
+
+            files_created = ProjectFile.objects.bulk_create([
+                        ProjectFile(name=fi.name, file=fi, project=project)
+                        for fi in fi_list
+                        ])
+
+            for fi in files_created:
+                Segment.create_segments(fi)
+
+            return redirect(self.success_url)
+        else:
+            return redirect('project-create')

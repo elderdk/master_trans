@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<div class="container mt-5 py-2 w-50 bg-dark text-white">
+  <div class=row>
+    <div class="col-xl-12">
+      <form action="" method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ form.project|crispy }}
+        {% for file in files %}
+        {{ file.name }}
+        {% endfor %}
+        {{ form.files|crispy }}
+        <button type="submit" class="btn btn-success mt-3">Confirm</button>
+      </form>
+    </div>
+   </div>
+ </div>
+
+{% endblock content %}
