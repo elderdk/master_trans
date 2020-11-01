@@ -1,11 +1,15 @@
-from django.http import HttpResponse
+from collections import namedtuple
+
+import diff_match_patch
+import Levenshtein
+from django.conf import settings
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.http import HttpResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse_lazy
 from django.views.generic import DeleteView, ListView, View
-from django.contrib.auth.decorators import login_required
-from django.conf import settings
 
 from .forms import FileCreateForm, ProjectCreateForm, ProjectUpdateForm
 from .models import Project, ProjectFile, Segment
@@ -26,6 +30,44 @@ def segment_translate_view(request, pk):
         'translation/segment_list.html',
         {'segments': segments}
         )
+
+
+class GetDiffHtmlView(LoginRequiredMixin, View):
+    http_method_names = ['get']
+
+    def shortest_dist(self, all_segments, source_text):
+        params = 'db_seg_text db_target_text distance'.split()
+        Distance = namedtuple('Distance', params)
+        result = [
+            Distance(
+                db_seg_text=seg.source,
+                db_target_text=seg.target,
+                distance=Levenshtein.ratio(seg.source, source_text)
+            ) for seg in all_segments
+            if seg.target is not None and seg.target != ''
+        ]
+        best_match = max(result, key=lambda x: x.distance)
+        return best_match
+
+    def make_html(self, db_string, source_text):
+        dmp = diff_match_patch.diff_match_patch()
+        dmp.Diff_Timeout = 0
+        diffs = dmp.diff_main(db_string, source_text)
+        dmp.diff_cleanupSemantic(diffs)
+        htmlSnippet = dmp.diff_prettyHtml(diffs)
+        return htmlSnippet
+
+    def add_tgt_html(self, html_snippet, target_text):
+        text = '<br><br><span id="found_target_text">' + target_text + '</span>'
+        return html_snippet + text
+
+    def get(self, request, source_text, *args, **kwargs):
+        all_segments = Segment.objects.all()
+        closest_match = self.shortest_dist(all_segments, source_text)
+        html_snippet = self.make_html(closest_match.db_seg_text, source_text)
+        final_html = self.add_tgt_html(html_snippet,
+                                       closest_match.db_target_text)
+        return HttpResponse(final_html)
 
 
 class SegmentCommitView(LoginRequiredMixin, View):

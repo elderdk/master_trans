@@ -1,18 +1,8 @@
-var textareas = document.querySelectorAll('textarea');
-
-textareas.forEach(textarea => 
-  textarea.addEventListener('keydown', autosize)
-  )
-
-textareas.forEach(textarea =>
-  postloadautosize(textarea))
-     
+  
 function autosize(){
   var el = this;
   setTimeout(function(){
     el.style.cssText = 'height:auto; padding:0';
-    // for box-sizing other than "content-box" use:
-    // el.style.cssText = '-moz-box-sizing:content-box';
     height = el.scrollHeight + 5;
     el.style.cssText = 'height:' + height + 'px';
   },0);
@@ -25,7 +15,6 @@ function postloadautosize(el){
   },0);
 }
 
-// make commit
 function send_commit(commit_url, csrf_token, text){
   var xhr = new XMLHttpRequest();
   xhr.open("POST", commit_url, true);
@@ -34,11 +23,32 @@ function send_commit(commit_url, csrf_token, text){
   xhr.send(text);
 }
 
-//// textarea shortcuts
+function retrieve_match(text) {
+
+  var xhr = new XMLHttpRequest();
+
+  xhr.onreadystatechange = function() {
+    if (xhr.readyState === 4) {
+      update_search_result(xhr.response);
+    }
+  }
+
+  search_url = "search_match/" + text
+  xhr.open("GET", search_url, true);
+  xhr.send(text);
+}
+
+function update_search_result(htmlSnippet) {
+  const search_result_span = document.querySelector('#search_result')
+  search_result_span.innerHTML = htmlSnippet
+}
+
+
+//// textarea shortcuts ////
 
 // Commit (ctrl + enter)
 function make_commit(e) {
-  commit_url = e.currentTarget.attributes.getNamedItem("commit-url").value  
+  commit_url = e.currentTarget.attributes.getNamedItem("commit-url").value
   text = e.currentTarget.value
   status_tag = e.target.parentNode.previousElementSibling
   status_tag.innerHTML = 'Translated'
@@ -64,6 +74,15 @@ function move_up(e) {
   setTimeout(function(){ previous_textarea.selectionStart = previous_textarea.selectionEnd = 10000; }, 0);
 }
 
+// Copy found result to textarea (ctrl + t)
+function copy_found_result(e) {
+  found_result = doucment.querySelector('#found_target_text').value;
+  e.currentTarget.value = found_result;
+  setTimeout(function(){ e.currentTarget.selectionStart = e.currentTarget.selectionEnd = 10000; }, 0);
+}
+
+
+// Register short_cuts
 function short_cuts(e) {
   // Ctrl + Enter
   if (e.ctrlKey && e.keyCode == 13) { make_commit(e) }
@@ -71,9 +90,22 @@ function short_cuts(e) {
   else if (e.ctrlKey && e.keyCode == 40) { move_below(e) }
   // Ctrl + Uparrow
   else if (e.ctrlKey && e.keyCode == 38) { move_up(e) }
+  // Ctrl + t
+  else if (e.ctrlKey && e.keyCode == 84) { copy_found_result(e) }
 }
-// register the handler
+
+
+//// register the handler ////
+var textareas = document.querySelectorAll('textarea');
+
 textareas.forEach(textarea => 
   textarea.addEventListener('keyup', short_cuts, false)
   )
 
+textareas.forEach(textarea => 
+  textarea.addEventListener('keydown', autosize)
+  )
+
+textareas.forEach(textarea =>
+  postloadautosize(textarea)
+  )

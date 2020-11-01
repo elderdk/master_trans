@@ -1,5 +1,0 @@
-{
-    "python.pythonPath": "/home/django/VSCode/master_trans/venv/bin/python3",
-    "python.linting.enabled": true,
-    "python.linting.flake8Enabled": true
-}

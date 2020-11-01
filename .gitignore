@@ -132,3 +132,4 @@ dmypy.json
 # my exceptions
 .env
 .vscode/
+testfiles/

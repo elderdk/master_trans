@@ -20,7 +20,11 @@ urlpatterns = [
     path('projcet/translate/commit/<int:file_id>/<int:seg_id>',
          views.SegmentCommitView.as_view(),
          name='segment-commit'
-         )
+         ),
 
+    path('project/translate/search_match/<str:source_text>',
+         views.GetDiffHtmlView.as_view(),
+         name='search_match'
+         ),
 
 ]
