@@ -9,6 +9,7 @@
         {% csrf_token %}
         {{ form.project|crispy }}
         {{ form.files|crispy }}
+        {{ form.sentence_parser|crispy }}
         <button type="submit" class="btn btn-success mt-3">Confirm</button>
       </form>
     </div>

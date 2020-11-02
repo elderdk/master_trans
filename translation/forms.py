@@ -1,6 +1,6 @@
 from django import forms
 
-from .models import Project
+from .models import Project, SentenceParser
 
 
 class ProjectCreateForm(forms.ModelForm):
@@ -27,3 +27,10 @@ class ProjectUpdateForm(forms.ModelForm):
             'deadline': forms.DateInput(attrs={'type': 'date'})
         }
         fields = ['name', 'client', 'deadline']
+
+
+class SentenceParserForm(forms.ModelForm):
+
+    class Meta:
+        model=SentenceParser
+        fields = ['default_regex', 'exclusion']

@@ -11,7 +11,7 @@ from django.shortcuts import redirect, render
 from django.urls import reverse_lazy
 from django.views.generic import DeleteView, ListView, View
 
-from .forms import FileCreateForm, ProjectCreateForm, ProjectUpdateForm
+from .forms import FileCreateForm, ProjectCreateForm, ProjectUpdateForm, SentenceParserForm
 from .models import Project, ProjectFile, Segment
 
 
@@ -30,6 +30,12 @@ def segment_translate_view(request, pk):
         'translation/segment_list.html',
         {'segments': segments}
         )
+
+def all_forms_valid(forms):
+    for form in forms:
+        if not form.is_valid():
+            return ValueError, f"{form} is not valid."
+    return True
 
 
 class GetDiffHtmlView(LoginRequiredMixin, View):
@@ -91,7 +97,8 @@ class ProjectListView(LoginRequiredMixin, ListView):
 class ProjectCreateView(LoginRequiredMixin, View):
     model = Project
     form_classes = {'project': ProjectCreateForm,
-                    'files': FileCreateForm}
+                    'files': FileCreateForm,
+                    'sentence_parser': SentenceParserForm}
     success_url = reverse_lazy('dashboard')
     template_name = 'translation/project_form.html'
     file_not_supported_msg = (
@@ -114,8 +121,12 @@ class ProjectCreateView(LoginRequiredMixin, View):
 
         project_form = self.form_classes['project'](request.POST)
         files_form = self.form_classes['files'](request.POST, request.FILES)
+        sentence_parser = self.form_classes['sentence_parser'](request.POST)
 
-        if project_form.is_valid() and files_form.is_valid():
+        all_forms = [project_form, files_form, sentence_parser]
+
+        if all_forms_valid(all_forms):
+
             project = project_form.save(commit=False)
             project.user = request.user
             fi_list = request.FILES.getlist('file_field')
@@ -131,8 +142,13 @@ class ProjectCreateView(LoginRequiredMixin, View):
                         for fi in fi_list
                         ])
 
+            parser = sentence_parser.save(commit=False)
+            parser.project = project
+            sentence_parser.save()
+
             for fi in files_created:
-                Segment.create_segments(fi)
+                parser.create_segments(fi)
+
 
             return redirect(self.success_url)
         else:
@@ -150,8 +166,9 @@ class ProjectDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
 
 class ProjectUpdateView(LoginRequiredMixin, UserPassesTestMixin, View):
     model = Project
-    form_classes = {'project': ProjectUpdateForm,
-                    'files': FileCreateForm}
+    form_classes = {'project': ProjectCreateForm,
+                    'files': FileCreateForm,
+                    'sentence_parser': SentenceParserForm}
     success_url = reverse_lazy('dashboard')
     template_name = 'translation/project_update_form.html'
     file_not_supported_msg = (
@@ -170,7 +187,8 @@ class ProjectUpdateView(LoginRequiredMixin, UserPassesTestMixin, View):
     def get(self, request, *args, **kwargs):
         project = self.get_object()
         form_classes = {'project': ProjectUpdateForm(instance=project),
-                        'files': FileCreateForm}
+                        'files': FileCreateForm,
+                        'sentence_parser': SentenceParserForm}
 
         form = form_classes
         fis = project.files.all()
@@ -193,8 +211,11 @@ class ProjectUpdateView(LoginRequiredMixin, UserPassesTestMixin, View):
         project_form = self.form_classes['project'](request.POST,
                                                     instance=project)
         files_form = self.form_classes['files'](request.POST, request.FILES)
+        sentence_parser = self.form_classes['sentence_parser'](request.POST)
 
-        if project_form.is_valid() and files_form.is_valid():
+        all_forms = [project_form, files_form, sentence_parser]
+
+        if all_forms_valid(all_forms):
             project = project_form.save(commit=False)
             project.user = request.user
             fi_list = request.FILES.getlist('file_field')
@@ -212,6 +233,10 @@ class ProjectUpdateView(LoginRequiredMixin, UserPassesTestMixin, View):
 
             for fi in files_created:
                 Segment.create_segments(fi)
+
+            parser = sentence_parser.save(commit=False)
+            parser.project = project
+            sentence_parser.save()
 
             return redirect(self.success_url)
         else:

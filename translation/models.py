@@ -63,20 +63,6 @@ class ProjectFile(models.Model):
 
 class Segment(models.Model):
 
-    def create_segments(fi):
-        with fi.file.open(mode='r') as f:
-            pattern = '(?:[.!? ]|^)([A-Z][^.!?\n]*[.!?])(?= |[A-Z]|$)'
-            sentences = re.findall(pattern, f.read())
-
-            num = 1
-            for sentence in sentences:
-                Segment.objects.create(
-                    file=fi,
-                    source=sentence,
-                    seg_id=num
-                )
-                num += 1
-
     seg_id = models.IntegerField()
     file = models.ForeignKey(
         ProjectFile,
@@ -115,3 +101,31 @@ class Segment(models.Model):
 
     def __str__(self):
         return self.source
+
+
+class SentenceParser(models.Model):
+    project = models.ForeignKey(Project,
+                                on_delete=models.CASCADE,
+                                related_name='sentence_parser')
+    default_regex = models.CharField(max_length=255,
+                                     default="(?<=[\"\'\.])(?<![s])\s+")
+    exclusion = models.CharField(max_length=255,
+                                 default="(?<!Mr\.)(?<!Mrs\.)(?<![^\.\,]\")")
+    
+    def create_segments(self, fi):
+        with fi.file.open(mode='r') as f:
+            regex = re.compile(self.full_regex, flags=re.UNICODE)
+            sentences = regex.split(f.read())
+
+            num = 1
+            for sentence in sentences:
+                Segment.objects.create(
+                    file=fi,
+                    source=sentence,
+                    seg_id=num
+                )
+                num += 1
+
+    @property
+    def full_regex(self):
+        return self.exclusion + self.default_regex

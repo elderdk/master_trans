@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Project, ProjectFile, Phase, Segment
+from .models import Project, ProjectFile, Phase, Segment, SentenceParser
 
 
 @admin.register(Project)
@@ -19,4 +19,8 @@ class PhaseAdmin(admin.ModelAdmin):
 
 @admin.register(Segment)
 class SegmentAdmin(admin.ModelAdmin):
+    pass
+
+@admin.register(SentenceParser)
+class SentenceParserAdmin(admin.ModelAdmin):
     pass
