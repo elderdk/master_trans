@@ -34,6 +34,9 @@
     
     C. Each file should display the work mode (T or R) available to that user 
         (nothing if no role is assigned)
+        This 'mode' information should be able to act with the database
+        when changing the segment
+            (Status get marked "signed-off" if the segment is updated while in sign-off mode)
 
 3. Segment navigation
     A. When committing a segment, the cursor should go to the last non-committed
@@ -57,6 +60,6 @@
 8. When a client is not assigned during the project creation, automatically
     create a client with the same name as the user who created the project
 
-9. Return "No segment found" if the databsae doesn't have any segment object.
+<!-- 9. Return "No segment found" if the databsae doesn't have any segment object. -->
 
-10. Make a setting in Project model for tm_search minimum Levenshtein value (e.g. 0.8 or above)
+<!-- 10. Make a setting in Project model for tm_search minimum Levenshtein value (e.g. 0.8 or above) -->

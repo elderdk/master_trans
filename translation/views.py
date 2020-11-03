@@ -20,22 +20,24 @@ def display_landing(request):
     return render(request, 'landing.html')
 
 
-@login_required
-def segment_translate_view(request, pk):
-    project_file = ProjectFile.objects.get(pk=pk)
-
-    segments = project_file.segments.all().order_by('seg_id')
-    return render(
-        request,
-        'translation/segment_list.html',
-        {'segments': segments}
-        )
-
 def all_forms_valid(forms):
     for form in forms:
         if not form.is_valid():
             return ValueError, f"{form} is not valid."
     return True
+
+
+class SegmentTranslateView(LoginRequiredMixin, ListView):
+
+    model = Segment
+    template_name = 'translation/segment_list.html'
+    paginate_by = 50
+    context_object_name = 'segments'
+
+    def get_queryset(self):
+        project_file = ProjectFile.objects.get(pk=self.kwargs.get('pk'))
+        segments = project_file.segments.all().order_by('seg_id')
+        return segments
 
 
 class GetDiffHtmlView(LoginRequiredMixin, View):
