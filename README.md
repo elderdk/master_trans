@@ -1,6 +1,6 @@
 # todos
 
-1. Add sentence break exclusions
+<!-- 1. Add sentence break exclusions
     sentences should not break at the end of certain patterns
     e.g.
         Mr. Elder was walking down the street.
@@ -9,7 +9,7 @@
         1. Mr.
         2. Elder was walking down the street.
 
-    This should not happen.
+    This should not happen. -->
 
 2. Workers role distinction
     A. when (or after) creating a project, the creator or a staff member
@@ -56,3 +56,7 @@
 
 8. When a client is not assigned during the project creation, automatically
     create a client with the same name as the user who created the project
+
+9. Return "No segment found" if the databsae doesn't have any segment object.
+
+10. Make a setting in Project model for tm_search minimum Levenshtein value (e.g. 0.8 or above)

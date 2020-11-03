@@ -52,8 +52,13 @@ class GetDiffHtmlView(LoginRequiredMixin, View):
             ) for seg in all_segments
             if seg.target is not None and seg.target != ''
         ]
-        best_match = max(result, key=lambda x: x.distance)
-        return best_match
+
+        match_above_threshold = [seg for seg in result if seg.distance > 0.7]
+        if len(match_above_threshold) <= 0:
+            raise ValueError('No segment above match threshold found.')
+        else:
+            best_match = max(match_above_threshold, key=lambda x: x.distance)    
+            return best_match
 
     def make_html(self, db_string, source_text):
         dmp = diff_match_patch.diff_match_patch()
@@ -69,7 +74,14 @@ class GetDiffHtmlView(LoginRequiredMixin, View):
 
     def get(self, request, source_text, *args, **kwargs):
         all_segments = Segment.objects.all()
-        closest_match = self.shortest_dist(all_segments, source_text)
+        if len(all_segments) <= 0:
+            return HttpResponse('No segment found in the database.')
+
+        try:
+            closest_match = self.shortest_dist(all_segments, source_text)
+        except ValueError as err:
+            return HttpResponse(err)
+            
         html_snippet = self.make_html(closest_match.db_seg_text, source_text)
         final_html = self.add_tgt_html(html_snippet,
                                        closest_match.db_target_text)
