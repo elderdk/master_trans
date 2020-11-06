@@ -108,9 +108,9 @@ class SentenceParser(models.Model):
                                 on_delete=models.CASCADE,
                                 related_name='sentence_parser')
     default_regex = models.CharField(max_length=255,
-                                     default="(?<=[\"\'\.])(?<![s])\s+")
+                                     default=r"(?<=[\"'.])(?<![s])\s+")
     exclusion = models.CharField(max_length=255,
-                                 default="(?<!Mr\.)(?<!Mrs\.)(?<![^\.\,]\")")
+                                 default=r'(?<!Mr.)(?<!Mrs.)(?<![^.,]")')
     
     def create_segments(self, fi):
         with fi.file.open(mode='r') as f:

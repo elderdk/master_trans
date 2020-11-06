@@ -13,38 +13,38 @@
     {% for project in projects %}
     <div class="row">
         <div class="col-xl-12">
-	<div id="accordion{{forloop.counter}}" role="tablist"> 
-	  <div class="card">
-	    <div class="card-header pl-2" role="tab" id="headingOne{{forloop.counter}}">
-        <h5 class="mb-0">
-          <a data-toggle="collapse" href="#collapseOne{{forloop.counter}}" role="button" aria-expanded="true" aria-controls="collapseOne{{forloop.counter}}"> 
-          {{ project.name }} 
-           </a> 
-         </h5>
-          {% if user == project.user %}
-            <a href={% url "project-update" project.pk %}><button type="button" class="btn btn-info btn-sm float-left mr-1">Update</button></a>
-            <a href={% url "project-delete" project.pk %}><button type="button" class="btn btn-danger btn-sm float-left mr-1">Delete</button></a>
-          {% endif %}
-         </div>
-	    <div id="collapseOne{{forloop.counter}}" class="collapse show" role="tabpanel" aria-labelledby="headingOne{{forloop.counter}}" data-parent="#accordion{{forloop.counter}}">
-	      <div class="card-body pt-1">
-        {% if project.files.all %}
-            {% for file in project.files.all %}
-          <div class="row mt-1">
-            <a href={% url 'segment-list' file.id %}>{{ file.name }}</a>
-          </div>
-        {% endfor %}
-        {% else %}
-        <div class="row mt-1"></div>
-          No files
-         </div>
-        {% endif %}
+	        <div id="accordion{{forloop.counter}}" role="tablist"> 
+            <div class="card">
+              <div class="card-header pl-2" role="tab" id="headingOne{{forloop.counter}}">
+                <h5 class="mb-0">
+                  <a data-toggle="collapse" href="#collapseOne{{forloop.counter}}" role="button" aria-expanded="true" aria-controls="collapseOne{{forloop.counter}}"> 
+                  {{ project.name }} 
+                  </a> 
+                 </h5>
+                  {% if user == project.user %}
+                    <a href={% url "project-update" project.pk %}><button type="button" class="btn btn-info btn-sm float-left mr-1">Update</button></a>
+                    <a href={% url "project-delete" project.pk %}><button type="button" class="btn btn-danger btn-sm float-left mr-1">Delete</button></a>
+                  {% endif %}
+               </div>
+              <div id="collapseOne{{forloop.counter}}" class="collapse show" role="tabpanel" aria-labelledby="headingOne{{forloop.counter}}" data-parent="#accordion{{forloop.counter}}">
+                <div class="card-body pt-1">
+                  {% if project.files.all %}
+                      {% for file in project.files.all %}
+                    <div class="row mt-1">
+                      <a href={% url 'segment-list' file.id %}>{{ file.name }}</a>
+                    </div>
+                  {% endfor %}
+                  {% else %}
+                  <div class="row mt-1">
+                    No files
+                  </div>
+                  {% endif %}
+                  </div>
+                </div>
+               </div>
+             </div>
+           </div>
         </div>
-          </div>
-       </div>
-      </div>
-  </div>
-  </div>
   {% endfor %}
 </div>
 {% endblock content %}

@@ -43,9 +43,11 @@
         segment, i.e. it should skip all comitted segments
 
 4. Segment pagination
-    A. add segment pagination.
+    <!-- A. add segment pagination. -->
     B. There should be a default seg num for each page but should be configurable
         right in the segment list view.
+    C. Allow user to type in a segment and automatically move to the page that contains the segment
+    D. Allow user to type in a page number and automatically move to that page
 
 5. Add more supported file types
     A. At least .docx and .xlsx must be supported.
