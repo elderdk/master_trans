@@ -10,7 +10,15 @@ class ProjectCreateForm(forms.ModelForm):
         widgets = {
             'deadline': forms.DateInput(attrs={'type': 'date'})
         }
-        fields = ['name', 'client', 'deadline']
+        fields = [
+            'name', 
+            'client', 
+            'deadline', 
+            'translators',
+            'reviewers',
+            'qaers',
+            'torers'
+            ]
 
 
 class FileCreateForm(forms.Form):

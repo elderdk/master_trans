@@ -15,7 +15,16 @@ urlpatterns = [
          name='project-update'),
 
     path('project/translate/<int:pk>', views.SegmentTranslateView.as_view(),
-         name='segment-list'),
+         name='segment-translate'),
+         
+    path('project/review/<int:pk>', views.SegmentReviewView.as_view(),
+         name='segment-review'),
+    
+    path('project/review/<int:pk>', views.SegmentQAView.as_view(),
+         name='segment-qa'),
+     
+    path('project/review/<int:pk>', views.SegmentTORView.as_view(),
+         name='segment-tor'),
 
     path('projcet/translate/commit/<int:file_id>/<int:seg_id>',
          views.SegmentCommitView.as_view(),

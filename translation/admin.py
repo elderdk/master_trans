@@ -5,11 +5,11 @@ from .models import Project, ProjectFile, Phase, Segment, SentenceParser
 @admin.register(Project)
 class ProjectAdmin(admin.ModelAdmin):
     pass
-
+        
 
 @admin.register(ProjectFile)
 class FileAdmin(admin.ModelAdmin):
-    pass
+    list_display = ('name', 'project')
 
 
 @admin.register(Phase)

@@ -22,17 +22,53 @@ def display_landing(request):
     return render(request, 'landing.html')
 
 
-class SegmentTranslateView(LoginRequiredMixin, ListView):
+class SegmentTranslateView(LoginRequiredMixin, UserPassesTestMixin, ListView):
 
     model = Segment
     template_name = 'translation/segment_list.html'
     paginate_by = 50
     context_object_name = 'segments'
+    work_as = 'translators'
 
     def get_queryset(self):
         project_file = ProjectFile.objects.get(pk=self.kwargs.get('pk'))
         segments = project_file.segments.all().order_by('seg_id')
         return segments
+
+    def get_object(self):
+        file_id = self.kwargs.get('pk')
+        return ProjectFile.objects.get(pk=file_id)
+    def test_func(self):
+        fi = self.get_object()
+        return self.request.user in fi.project.translators.all()
+
+
+class SegmentReviewView(SegmentTranslateView):
+
+    work_as = 'reviewers'
+
+    def test_func(self):
+        fi = self.get_object()
+        return self.request.user in fi.project.reviewers.all()
+
+
+class SegmentQAView(SegmentTranslateView):
+    
+    work_as = 'qa'
+
+    def test_func(self):
+        fi = self.get_object()
+        return self.request.user in fi.project.qaers.all()
+
+
+class SegmentTORView(SegmentTranslateView):
+    
+    work_as = 'tor'
+
+    def test_func(self):
+        fi = self.get_object()
+        return self.request.user in fi.project.torers.all()
+
 
 
 class GetDiffHtmlView(LoginRequiredMixin, View):
@@ -101,9 +137,8 @@ class ProjectCreateView(LoginRequiredMixin, View):
         if not is_all_supported(fi_list):
             messages.error(request, FILE_NOT_SUPPORTED_MSG)
             return redirect('project-create')
-
+            
         project_form.save()
-        
         parser = sentence_parser.save(commit=False)
         parser.project = project
 

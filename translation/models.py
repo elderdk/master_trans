@@ -37,12 +37,26 @@ class Project(models.Model):
                                blank=False,
                                related_name='client')
     deadline = models.DateTimeField(blank=True, null=True)
+    translators = models.ManyToManyField(User, related_name='translators')
+    reviewers = models.ManyToManyField(User, related_name='reviewers')
+    qaers = models.ManyToManyField(User, related_name='qaers')
+    torers = models.ManyToManyField(User, related_name='torers')
 
     def __str__(self):
         return self.name
 
     def get_absolute_url(self):
         return reverse('dashboard')
+
+    @property
+    def workers(self):
+        querysets = [
+            self.translators.all(), 
+            self.reviewers.all(), 
+            self.qaers.all(), 
+            self.torers.all()
+            ]
+        return [user for queryset in querysets for user in queryset]
 
 
 class ProjectFile(models.Model):
