@@ -21,6 +21,7 @@
                 Mr. C - QA
                 Mr. D - T/O
                 Creator - sign-off
+        <!-- in models.py -->
     
     B. When opening a file, each worker should only be able to open the file
         in the mode that they are assigned to.
@@ -31,6 +32,14 @@
             If Mr. B (reviewr) accesses the file as a reviewer, any edit he makes
             should change the seg status as "translation rejected" and
             any commit should change the status to "translation accepted"
+        <!-- models.py -->
+        <!-- Give 'translators', 'reviewers', 'QAer', 'TORer' in Project model.
+        Each of these fields should be a dropd-down selection of workers with that specific role object assigned to them.
+            i.e.) If worker1 has Role of 'translator' and 'reviewr' assigned to him, he should appear only for the 'translators' and 'reviewrs' selection in Project.
+        In project_list.html, make 'translate' 'review' 'qa' 'tor' buttons next to each file
+        The button will only appear if the worker is assigned to the project for that specific role
+            i.e.) If a worker1 is assigned to project1 as a translator, only 'translate' button should appear, not the other ones.
+        Managers should be able to see all. -->
     
     C. Each file should display the work mode (T or R) available to that user 
         (nothing if no role is assigned)
