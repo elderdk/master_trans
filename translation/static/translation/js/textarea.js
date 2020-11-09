@@ -15,10 +15,17 @@ function postloadautosize(el){
   },0);
 }
 
-function send_commit(commit_url, csrf_token, text){
-  var xhr = new XMLHttpRequest();
+function send_commit(commit_url, csrf_token, text, e){
+  const xhr = new XMLHttpRequest();
+
+  xhr.onreadystatechange = function() {
+    if (xhr.readyState === 4) {
+      update_status(xhr.response, e);
+    }
+  }
+
   xhr.open("POST", commit_url, true);
-  xhr.setRequestHeader("X-CSRFToken", csrf_token); 
+  xhr.setRequestHeader("X-CSRFToken", csrf_token);
   xhr.setRequestHeader('Content-Type', 'application/json');
   xhr.send(text);
 }
@@ -33,7 +40,7 @@ function retrieve_match(text) {
     }
   }
 
-  search_url = "search_match/" + text
+  search_url = "/search_match/" + text
   xhr.open("GET", search_url, true);
   xhr.send(text);
 }
@@ -43,6 +50,11 @@ function update_search_result(htmlSnippet) {
   search_result_span.innerHTML = htmlSnippet
 }
 
+function update_status(status_text, e) {
+  status_tag = e.target.parentNode.previousElementSibling
+  status_tag.innerHTML = status_text
+}
+
 
 //// textarea shortcuts ////
 
@@ -50,9 +62,7 @@ function update_search_result(htmlSnippet) {
 function make_commit(e) {
   commit_url = e.currentTarget.attributes.getNamedItem("commit-url").value
   text = e.currentTarget.value
-  status_tag = e.target.parentNode.previousElementSibling
-  status_tag.innerHTML = 'Translated'
-  send_commit(commit_url, csrf_token, text)
+  send_commit(commit_url, csrf_token, text, e)
   move_below(e)
 }
 

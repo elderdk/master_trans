@@ -16,8 +16,7 @@ class ProjectCreateForm(forms.ModelForm):
             'deadline', 
             'translators',
             'reviewers',
-            'qaers',
-            'torers'
+            'soers'
             ]
 
 

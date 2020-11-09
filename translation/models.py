@@ -1,4 +1,5 @@
 import re
+import uuid
 
 from django.db import models
 from users.models import User, Client
@@ -39,8 +40,11 @@ class Project(models.Model):
     deadline = models.DateTimeField(blank=True, null=True)
     translators = models.ManyToManyField(User, related_name='translators')
     reviewers = models.ManyToManyField(User, related_name='reviewers')
-    qaers = models.ManyToManyField(User, related_name='qaers')
-    torers = models.ManyToManyField(User, related_name='torers')
+    soers = models.ManyToManyField(User, related_name='soers')
+
+    translation_id = models.UUIDField(default=uuid.uuid4, editable=False)
+    review_id = models.UUIDField(default=uuid.uuid4, editable=False)
+    sign_off_id = models.UUIDField(default=uuid.uuid4, editable=False)
 
     def __str__(self):
         return self.name
@@ -53,8 +57,7 @@ class Project(models.Model):
         querysets = [
             self.translators.all(), 
             self.reviewers.all(), 
-            self.qaers.all(), 
-            self.torers.all()
+            self.soers.all()
             ]
         return [user for queryset in querysets for user in queryset]
 

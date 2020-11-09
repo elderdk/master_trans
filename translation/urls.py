@@ -19,21 +19,16 @@ urlpatterns = [
          
     path('project/review/<int:pk>', views.SegmentReviewView.as_view(),
          name='segment-review'),
-    
-    path('project/review/<int:pk>', views.SegmentQAView.as_view(),
-         name='segment-qa'),
-     
-    path('project/review/<int:pk>', views.SegmentTORView.as_view(),
-         name='segment-tor'),
+         
+    path('project/sign-off/<int:pk>', views.SegmentSOView.as_view(),
+         name='segment-so'),
 
-    path('projcet/translate/commit/<int:file_id>/<int:seg_id>',
+    path('commit/<int:file_id>/<int:seg_id>/<str:commit_token>',
          views.SegmentCommitView.as_view(),
-         name='segment-commit'
-         ),
+         name='segment-commit'),
 
-    path('project/translate/search_match/<str:source_text>',
+    path('search_match/<str:source_text>',
          views.GetDiffHtmlView.as_view(),
-         name='search_match'
-         ),
+         name='search_match'),
 
 ]

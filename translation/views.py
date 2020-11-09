@@ -28,7 +28,7 @@ class SegmentTranslateView(LoginRequiredMixin, UserPassesTestMixin, ListView):
     template_name = 'translation/segment_list.html'
     paginate_by = 50
     context_object_name = 'segments'
-    work_as = 'translators'
+    commit_as = 'TR'
 
     def get_queryset(self):
         project_file = ProjectFile.objects.get(pk=self.kwargs.get('pk'))
@@ -38,37 +38,45 @@ class SegmentTranslateView(LoginRequiredMixin, UserPassesTestMixin, ListView):
     def get_object(self):
         file_id = self.kwargs.get('pk')
         return ProjectFile.objects.get(pk=file_id)
+        
     def test_func(self):
         fi = self.get_object()
         return self.request.user in fi.project.translators.all()
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['commit_token'] = self.get_commit_as()
+        return context
+
+    def get_commit_as(self):
+        fi = self.get_object()
+        project = fi.project
+
+        commit_as_dict = {
+            'TR': project.translation_id,
+            'RV': project.review_id,
+            'SO': project.sign_off_id
+        }
+
+        return commit_as_dict.get(self.commit_as)
+
 
 class SegmentReviewView(SegmentTranslateView):
 
-    work_as = 'reviewers'
+    commit_as = 'RV'
 
     def test_func(self):
         fi = self.get_object()
         return self.request.user in fi.project.reviewers.all()
 
 
-class SegmentQAView(SegmentTranslateView):
+class SegmentSOView(SegmentTranslateView):
     
-    work_as = 'qa'
+    commit_as = 'SO'
 
     def test_func(self):
         fi = self.get_object()
-        return self.request.user in fi.project.qaers.all()
-
-
-class SegmentTORView(SegmentTranslateView):
-    
-    work_as = 'tor'
-
-    def test_func(self):
-        fi = self.get_object()
-        return self.request.user in fi.project.torers.all()
-
+        return self.request.user in fi.project.soers.all()
 
 
 class GetDiffHtmlView(LoginRequiredMixin, View):
@@ -93,14 +101,28 @@ class GetDiffHtmlView(LoginRequiredMixin, View):
 class SegmentCommitView(LoginRequiredMixin, View):
     http_method_names = ['post']
 
-    def post(self, request, file_id, seg_id):
+    def post(self, request, file_id, seg_id, commit_token):
+
+        def set_status(projectfile, commit_token):
+            project = projectfile.project
+             
+            if commit_token == project.translation_id.__str__():
+                return 'TR', 'Translated'
+            elif commit_token == project.review_id.__str__():
+                return 'RV', 'Reviewed'
+            elif commit_token == project.sign_off_id.__str__():
+                return 'SO', 'Signed Off'
+
         projectfile = ProjectFile.objects.get(id=file_id)
         segment = projectfile.segments.get(id=seg_id)
         text = request.body.decode('utf-8')
+
         segment.target = text
-        segment.status = 'TR'
+
+        status, status_text = set_status(projectfile, commit_token)
+        segment.status = status
         segment.save()
-        return HttpResponse('POST request')
+        return HttpResponse(status_text)
 
 
 class ProjectListView(LoginRequiredMixin, ListView):

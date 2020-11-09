@@ -40,11 +40,8 @@
                         {% if user in project.reviewers.all %}
                         <a href={% url 'segment-review' file.id %}><button type="button" class="btn btn-info btn-sm">Review</button></a>
                         {% endif %}
-                        {% if user in project.qaers.all %}
-                        <a href={% url 'segment-qa' file.id %}><button type="button" class="btn btn-info btn-sm">QA</button></a>
-                        {% endif %}
-                        {% if user in project.torers.all %}
-                        <a href={% url 'segment-tor' file.id %}><button type="button" class="btn btn-info btn-sm">Target Only Review</button></a>
+                        {% if user in project.soers.all %}
+                        <a href={% url 'segment-so' file.id %}><button type="button" class="btn btn-info btn-sm">Sign-off</button></a>
                         {% endif %}
                         </div>
                       </div>

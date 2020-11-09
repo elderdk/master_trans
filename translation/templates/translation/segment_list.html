@@ -53,7 +53,7 @@
             <div class="col-xl-5 border seg-source source-{{ forloop.counter }}">{{ segment.source }}</div>
             <div class="col-xl-1 border small p-1 seg-status">{{ segment.get_status_display }}</div>
             <div class="col-xl-5 border p-1 seg-target">
-              <textarea id="target-{{ forloop.counter }}" commit-url={% url 'segment-commit' segment.file.id segment.id %} onfocus="retrieve_match(this.parentNode.previousElementSibling.previousElementSibling.textContent)">{% if segment.target %}{{ segment.target }}{% else %}{% endif %}</textarea>
+              <textarea id="target-{{ forloop.counter }}" commit-url={% url 'segment-commit' segment.file.id segment.id commit_token %} onfocus="retrieve_match(this.parentNode.previousElementSibling.previousElementSibling.textContent)">{% if segment.target %}{{ segment.target }}{% else %}{% endif %}</textarea>
              </div>
 			    </div>
 			   </div>
@@ -70,7 +70,8 @@
 
   <script type="text/javascript">
     const csrf_token = "{{ csrf_token }}"
-  </script>
+  </script>  
+  
   <script src={% static "translation/js/textarea.js" %} type="text/javascript"></script>
   
 {% endblock %}
