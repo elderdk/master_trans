@@ -43,6 +43,9 @@
                         {% if user in project.soers.all %}
                         <a href={% url 'segment-so' file.id %}><button type="button" class="btn btn-info btn-sm">Sign-off</button></a>
                         {% endif %}
+                        {% if user == project.user %}
+                        <a href={% url 'generate_target' file.id %}><button type="button" class="btn btn-info btn-sm">Generate Target</button></a>
+                        {% endif %}
                         </div>
                       </div>
                     {% endfor %}

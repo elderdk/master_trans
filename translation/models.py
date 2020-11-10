@@ -14,7 +14,7 @@ def get_file_path(instance, filename):
     today = date.strftime(date.today(), '%Y%m')
     project_name = project.name
     filename = filename
-    return f"{parent_folder}/{client}/{today}/{project_name}/{filename}"
+    return f"{parent_folder}/{client}/{today}/{project_name}/source/{filename}"
 
 
 class Phase(models.Model):

@@ -31,4 +31,7 @@ urlpatterns = [
          views.GetDiffHtmlView.as_view(),
          name='search_match'),
 
+    path('generate_target/<int:file_id>',
+         views.GenerateTargetView.as_view(),
+         name='generate_target'),
 ]
