@@ -22,16 +22,17 @@ def shortest_dist(all_segments, source_text):
                 db_target_text=seg.target,
                 distance=Levenshtein.ratio(seg.source, source_text)
             ) for seg in all_segments
-            if seg.target is not None and seg.target != ''
+            if seg.target is not None and seg.target != '' and
+            Levenshtein.ratio(seg.source, source_text) > SEGMENT_MATCH_THRESHOLD
         ]
 
-        match_above_threshold = [
-            seg for seg in result if seg.distance > SEGMENT_MATCH_THRESHOLD
-            ]
-        if len(match_above_threshold) == 0:
+        # match_above_threshold = [
+        #     seg for seg in result if seg.distance > SEGMENT_MATCH_THRESHOLD
+        #     ]
+        if len(result) == 0:
             raise ValueError('No segment above match threshold found.')
         
-        best_match = max(match_above_threshold, key=lambda x: x.distance)    
+        best_match = max(result, key=lambda x: x.distance)    
         return best_match
 
 
@@ -50,17 +51,14 @@ def add_target_html(html_snippet, target_text):
 
 
 def all_forms_valid(forms):
-    if not all([form.is_valid() for form in forms]):
-        return ValueError, f"One of the forms is not valid."
-    return True
+    return all([form.is_valid() for form in forms])
 
 
 def is_all_supported(fi_list):
-    for fi in fi_list:
-        ext = fi.name.split('.')[-1]
-        if ext not in settings.SUPPORTED_FILE_TYPES:
-            return False
-    return True
+    return all([
+        fi.name.split('.')[-1] in settings.SUPPORTED_FILE_TYPES 
+        for fi in fi_list
+    ])
 
 
 def create_file_and_segments(parser, fi_list, project_obj):
