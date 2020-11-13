@@ -7,6 +7,10 @@ from django.urls import reverse
 from datetime import date
 
 
+DEFAULT_REGEX = r"(?<=[\"'.])(?<![s])\s+"
+REGEX_EXCLUSION = r'(?<!Mr.)(?<!Mrs.)(?<![^.,]")'
+
+
 def get_file_path(instance, filename):
     project = instance.project
     parent_folder = 'project_files'
@@ -38,6 +42,7 @@ class Project(models.Model):
                                blank=False,
                                related_name='client')
     deadline = models.DateTimeField(blank=True, null=True)
+
     translators = models.ManyToManyField(User, related_name='translators')
     reviewers = models.ManyToManyField(User, related_name='reviewers')
     soers = models.ManyToManyField(User, related_name='soers')
@@ -55,8 +60,8 @@ class Project(models.Model):
     @property
     def workers(self):
         querysets = [
-            self.translators.all(), 
-            self.reviewers.all(), 
+            self.translators.all(),
+            self.reviewers.all(),
             self.soers.all()
             ]
         return [user for queryset in querysets for user in queryset]
@@ -95,7 +100,7 @@ class Segment(models.Model):
     DRAFT = 'DR'
     TRANSLATED = 'TR'
     TRANSLATION_REJECTED = 'TJ'
-    REVIWED = 'RV'
+    REVIEWED = 'RV'
     REVIEW_REJECTED = 'RJ'
     SIGNED_OFF = 'SO'
     SIGN_OFF_REJECTED = 'SJ'
@@ -105,7 +110,7 @@ class Segment(models.Model):
         (DRAFT, 'Draft'),
         (TRANSLATED, 'Translated'),
         (TRANSLATION_REJECTED, 'Translation Rejected'),
-        (REVIWED, 'Reviewed'),
+        (REVIEWED, 'Reviewed'),
         (REVIEW_REJECTED, 'Review Rejected'),
         (SIGNED_OFF, 'Signed Off'),
         (SIGN_OFF_REJECTED, 'Sign-off Rejected')
@@ -125,23 +130,21 @@ class SentenceParser(models.Model):
                                 on_delete=models.CASCADE,
                                 related_name='sentence_parser')
     default_regex = models.CharField(max_length=255,
-                                     default=r"(?<=[\"'.])(?<![s])\s+")
+                                     default=DEFAULT_REGEX)
     exclusion = models.CharField(max_length=255,
-                                 default=r'(?<!Mr.)(?<!Mrs.)(?<![^.,]")')
-    
+                                 default=REGEX_EXCLUSION)
+
     def create_segments(self, fi):
         with fi.file.open(mode='r') as f:
             regex = re.compile(self.full_regex, flags=re.UNICODE)
             sentences = regex.split(f.read())
 
-            num = 1
-            for sentence in sentences:
+            for num, sentence in enumerate(sentences, start=1):
                 Segment.objects.create(
                     file=fi,
                     source=sentence,
                     seg_id=num
                 )
-                num += 1
 
     @property
     def full_regex(self):

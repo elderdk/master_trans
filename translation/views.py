@@ -12,7 +12,7 @@ from .forms import (
     SentenceParserForm,
 )
 from .models import Project, ProjectFile, Segment, SentenceParser
-from .file_generators import generate_txt
+from .file_generators import TargetGenerator
 
 from .helpers import (
     shortest_dist,
@@ -36,7 +36,7 @@ class SegmentTranslateView(LoginRequiredMixin, UserPassesTestMixin, ListView):
     template_name = "translation/segment_list.html"
     paginate_by = 50
     context_object_name = "segments"
-    commit_as = "TR"
+    commit_as = Segment.TRANSLATED
 
     def get_queryset(self):
         project_file = ProjectFile.objects.get(pk=self.kwargs.get("pk"))
@@ -71,7 +71,7 @@ class SegmentTranslateView(LoginRequiredMixin, UserPassesTestMixin, ListView):
 
 class SegmentReviewView(SegmentTranslateView):
 
-    commit_as = "RV"
+    commit_as = Segment.REVIEWED
 
     def test_func(self):
         fi = self.get_object()
@@ -80,7 +80,7 @@ class SegmentReviewView(SegmentTranslateView):
 
 class SegmentSOView(SegmentTranslateView):
 
-    commit_as = "SO"
+    commit_as = Segment.SIGNED_OFF
 
     def test_func(self):
         fi = self.get_object()
@@ -92,7 +92,7 @@ class GetDiffHtmlView(LoginRequiredMixin, View):
 
     def get(self, request, source_text, *args, **kwargs):
         all_segments = Segment.objects.all()
-        if len(all_segments) == 0:
+        if all_segments.count() == 0:
             return HttpResponse("No segment found in the database.")
 
         try:
@@ -110,15 +110,22 @@ class SegmentCommitView(LoginRequiredMixin, View):
     http_method_names = ["post"]
 
     def post(self, request, file_id, seg_id, commit_token):
-        def set_status(projectfile, commit_token):
-            project = projectfile.project
 
-            if commit_token == project.translation_id.__str__():
-                return "TR", "Translated"
-            elif commit_token == project.review_id.__str__():
-                return "RV", "Reviewed"
-            elif commit_token == project.sign_off_id.__str__():
-                return "SO", "Signed Off"
+        def set_status(projectfile, commit_token):
+
+            project = projectfile.project
+            token_dict = {
+                project.translation_id.__str__(): Segment.TRANSLATED,
+                project.review_id.__str__(): Segment.REVIEWED,
+                project.sign_off_id.__str__(): Segment.SIGNED_OFF
+            }
+            
+            status_list = Segment.SEGMENT_STATUSES
+            abbreviate = token_dict.get(commit_token)
+
+            for idx, tup in enumerate(status_list):
+                if tup[0] == abbreviate:
+                    return abbreviate, status_list[idx][1]
 
         projectfile = ProjectFile.objects.get(id=file_id)
         segment = projectfile.segments.get(id=seg_id)
@@ -271,6 +278,7 @@ class GenerateTargetView(LoginRequiredMixin, UserPassesTestMixin, View):
 
         projectfile = self.get_object()
 
-        download_file = generate_txt(projectfile)
+        download_file = TargetGenerator()
+        download_file = download_file.generate_txt(projectfile)
 
         return FileResponse(open(str(download_file), "rb"), as_attachment=True)
