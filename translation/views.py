@@ -4,16 +4,23 @@ from django.http import HttpResponse, FileResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse_lazy
 from django.views.generic import DeleteView, ListView, View
+from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 
 from .forms import (
     FileCreateForm,
     ProjectCreateForm,
     ProjectUpdateForm,
     SentenceParserForm,
+    PaginationForm,
 )
-from .models import Project, ProjectFile, Segment, SentenceParser
+from .models import (
+                Project,
+                ProjectFile,
+                Segment,
+                SentenceParser,
+                ProjectPagination
+                )
 from .file_generators import TargetGenerator
-
 from .helpers import (
     shortest_dist,
     make_html,
@@ -30,13 +37,13 @@ def display_landing(request):
     return render(request, "landing.html")
 
 
-class SegmentTranslateView(LoginRequiredMixin, UserPassesTestMixin, ListView):
-
-    model = Segment
+class SegmentListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
     template_name = "translation/segment_list.html"
+    success_url = template_name
+    form_classes = {
+        "pagination": PaginationForm
+        }
     paginate_by = 50
-    context_object_name = "segments"
-    commit_as = Segment.TRANSLATED
 
     def get_queryset(self):
         project_file = ProjectFile.objects.get(pk=self.kwargs.get("pk"))
@@ -52,8 +59,10 @@ class SegmentTranslateView(LoginRequiredMixin, UserPassesTestMixin, ListView):
         return self.request.user in fi.project.translators.all()
 
     def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["commit_token"] = self.get_commit_as()
+        context = {
+            "commit_token": self.get_commit_as(),
+            "segments": self.get_object().segments.all()
+        }
         return context
 
     def get_commit_as(self):
@@ -68,8 +77,61 @@ class SegmentTranslateView(LoginRequiredMixin, UserPassesTestMixin, ListView):
 
         return commit_as_dict.get(self.commit_as)
 
+    # def get_paginate_by(self, queryset):
+    #     fi = self.get_object()
+    #     return fi.project.pagination.seg_per_page
 
-class SegmentReviewView(SegmentTranslateView):
+    # def get(self, request, *args, **kwargs):
+        
+    #     fi = self.get_object()
+    #     context = self.get_context_data()
+
+    #     # prepare context
+
+    #     pagination = fi.project.pagination
+    #     self.form_classes = {
+    #         "pagination": PaginationForm(instance=pagination),
+    #     }
+
+    #     context["form"] = self.form_classes
+
+    #     print(context)
+
+    #     return render(request, self.template_name, context)
+
+    # def post(self, request, *args, **kwargs):
+    #     fi = self.get_object()
+    #     pagination = fi.project.pagination
+    #     pagination_form = self.form_classes["pagination"](request.POST,
+    #                                                       instance=pagination
+    #                                                       )
+
+    #     if pagination_form.is_valid():
+
+    #         pagination = pagination_form.save(commit=False)
+    #         pagination.project = fi.project
+    #         pagination_form.save()
+    #         self.paginate_by = pagination.seg_per_page
+
+    #     self.form_classes = {
+    #         "pagination": PaginationForm(instance=pagination),
+    #     }
+
+    #     form = self.form_classes
+
+    #     context = self.get_context_data()
+
+    #     context["form"] = form
+
+    #     return render(request, self.template_name, context)
+
+
+class SegmentTranslateView(SegmentListView):
+
+    commit_as = Segment.TRANSLATED
+
+
+class SegmentReviewView(SegmentListView):
 
     commit_as = Segment.REVIEWED
 
@@ -78,7 +140,7 @@ class SegmentReviewView(SegmentTranslateView):
         return self.request.user in fi.project.reviewers.all()
 
 
-class SegmentSOView(SegmentTranslateView):
+class SegmentSOView(SegmentListView):
 
     commit_as = Segment.SIGNED_OFF
 
@@ -178,6 +240,8 @@ class ProjectCreateView(LoginRequiredMixin, View):
             return redirect("project-create")
 
         project_form.save()
+        pagination = ProjectPagination(project=project)
+        pagination.save()
         parser = sentence_parser.save(commit=False)
         parser.project = project
 

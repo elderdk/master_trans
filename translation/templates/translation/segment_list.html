@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 {% block content %}
+{% load crispy_forms_tags %}
 <link href={% static "translation/css/segment.css" %} rel="stylesheet" type="text/css">
 
 <div class="container-fluid mt-4">
@@ -29,6 +30,11 @@
     </div>
     <div class="col-xl-8 p-0">
       <div class="pagination p-2 d-flex justify-content-end">
+        <!-- <form action="" method="POST">
+        {% csrf_token %}
+        {{ form.pagination|crispy }}
+        <button type="submit">Submit</button>
+      </form> -->
         <span class="step-links">
             {% if page_obj.has_previous %}
                 <a href="?page=1">&laquo; first</a>

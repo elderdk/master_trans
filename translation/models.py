@@ -42,7 +42,7 @@ class Project(models.Model):
                                blank=False,
                                related_name='client')
     deadline = models.DateTimeField(blank=True, null=True)
-
+    
     translators = models.ManyToManyField(User, related_name='translators')
     reviewers = models.ManyToManyField(User, related_name='reviewers')
     soers = models.ManyToManyField(User, related_name='soers')
@@ -149,3 +149,12 @@ class SentenceParser(models.Model):
     @property
     def full_regex(self):
         return self.exclusion + self.default_regex
+
+
+class ProjectPagination(models.Model):
+    project = models.OneToOneField(
+                                   Project,
+                                   on_delete=models.CASCADE,
+                                   related_name='pagination'
+                                   )
+    seg_per_page = models.IntegerField(default=50)
