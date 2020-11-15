@@ -29,27 +29,33 @@
     </div>
     <div class="col-xl-8 p-0">
       <div class="pagination p-2 d-flex justify-content-end">
-        <span class="step-links">
+        <form action="" method="GET" id="paginator-form">
+          Go to seg:
+          <input name="goto_seg" class="paginator-input" type="text" id="goto-seg">
+          Seg per page:
+          <input name="paginate_by" class="paginator-input" type="text" id="seg_per_page" value="{{ paginator.per_page }}">
+        <!-- </form> -->
+          <span class="step-links">
             {% if page_obj.has_previous %}
                 <a href="?page=1">&laquo; first</a>
                 <a href="?page={{ page_obj.previous_page_number }}">previous</a>
             {% endif %}
     
             <span class="current">
-                Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+                <input name="page" class="paginator-input" type="text" id="page" value="{{ page_obj.number }}"> of {{ page_obj.paginator.num_pages }}.
             </span>
+          </form>
     
             {% if page_obj.has_next %}
                 <a href="?page={{ page_obj.next_page_number }}">next</a>
                 <a href="?page={{ page_obj.paginator.num_pages }}">last &raquo;</a>
             {% endif %}
-         </span>
        </div>
       {% for segment in segments %}
 	    <div class="row justify-content-center">
 			  <div class="col-xl-11">
             <div class="row {% cycle 'row1' 'row2' %} my-1">
-            <div class="col-xl-1 border seg-id">{{ segment.seg_id }}</div>
+            <div class="col-xl-1 border seg-id" id="seg-{{ segment.seg_id }}">{{ segment.seg_id }}</div>
             <div class="col-xl-5 border seg-source source-{{ forloop.counter }}">{{ segment.source }}</div>
             <div class="col-xl-1 border small p-1 seg-status">{{ segment.get_status_display }}</div>
             <div class="col-xl-5 border p-1 seg-target">
@@ -73,5 +79,6 @@
   </script>  
   
   <script src={% static "translation/js/textarea.js" %} type="text/javascript"></script>
+  <script src={% static "translation/js/paginator.js" %} type="text/javascript"></script>
   
 {% endblock %}

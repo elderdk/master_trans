@@ -30,13 +30,12 @@ def display_landing(request):
     return render(request, "landing.html")
 
 
-class SegmentTranslateView(LoginRequiredMixin, UserPassesTestMixin, ListView):
+class SegmentListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
 
     model = Segment
     template_name = "translation/segment_list.html"
-    paginate_by = 50
+    paginate_by = 10
     context_object_name = "segments"
-    commit_as = Segment.TRANSLATED
 
     def get_queryset(self):
         project_file = ProjectFile.objects.get(pk=self.kwargs.get("pk"))
@@ -68,8 +67,16 @@ class SegmentTranslateView(LoginRequiredMixin, UserPassesTestMixin, ListView):
 
         return commit_as_dict.get(self.commit_as)
 
+    def get_paginate_by(self, queryset):
+        return self.request.GET.get("paginate_by", self.paginate_by)
 
-class SegmentReviewView(SegmentTranslateView):
+
+class SegmentTranslateView(SegmentListView):
+
+    commit_as = Segment.TRANSLATED
+
+
+class SegmentReviewView(SegmentListView):
 
     commit_as = Segment.REVIEWED
 
@@ -78,7 +85,7 @@ class SegmentReviewView(SegmentTranslateView):
         return self.request.user in fi.project.reviewers.all()
 
 
-class SegmentSOView(SegmentTranslateView):
+class SegmentSOView(SegmentListView):
 
     commit_as = Segment.SIGNED_OFF
 
