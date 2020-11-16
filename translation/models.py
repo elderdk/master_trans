@@ -40,7 +40,8 @@ class Project(models.Model):
                                on_delete=models.SET_NULL,
                                null=True,
                                blank=False,
-                               related_name='client')
+                               related_name='client',
+                               )
     deadline = models.DateTimeField(blank=True, null=True)
 
     translators = models.ManyToManyField(User, related_name='translators')
@@ -149,3 +150,12 @@ class SentenceParser(models.Model):
     @property
     def full_regex(self):
         return self.exclusion + self.default_regex
+
+
+class ShortDistanceSegment(models.Model):
+    segment = models.ForeignKey(Segment,
+                                on_delete=models.CASCADE,
+                                related_name='short_distance_seg'
+                                )
+    distance = models.FloatField()
+    html_snippet = models.TextField()

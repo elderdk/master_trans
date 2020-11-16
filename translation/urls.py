@@ -27,7 +27,7 @@ urlpatterns = [
          views.SegmentCommitView.as_view(),
          name='segment-commit'),
 
-    path('search_match/<str:source_text>',
+    path('search_match/<int:file_id>/<str:source_text>',
          views.GetDiffHtmlView.as_view(),
          name='search_match'),
 

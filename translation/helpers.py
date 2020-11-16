@@ -4,7 +4,7 @@ import diff_match_patch
 import Levenshtein
 from django.conf import settings
 
-from .models import ProjectFile
+from .models import Segment, ProjectFile, ShortDistanceSegment
 
 
 SEGMENT_MATCH_THRESH = 0.7
@@ -15,6 +15,14 @@ params = "db_seg_text db_target_text distance".split()
 Distance = namedtuple("Distance", params)
 
 
+def dist_above_thres(seg, source_text):
+    return all([
+        seg.target is not None,
+        seg.target != "",
+        Levenshtein.ratio(seg.source, source_text) > SEGMENT_MATCH_THRESH
+    ])
+
+
 def shortest_dist(all_segments, source_text):
     result = [
         Distance(
@@ -23,9 +31,7 @@ def shortest_dist(all_segments, source_text):
             distance=Levenshtein.ratio(seg.source, source_text),
         )
         for seg in all_segments
-        if seg.target is not None
-        and seg.target != ""
-        and Levenshtein.ratio(seg.source, source_text) > SEGMENT_MATCH_THRESH
+        if dist_above_thres(seg, source_text)
     ]
 
     if len(result) == 0:
@@ -72,3 +78,20 @@ def create_file_and_segments(parser, fi_list, project_obj):
 
     for fi in files_created:
         parser.create_segments(fi)
+        create_shortest_dist_segment(fi)
+
+
+def create_shortest_dist_segment(fi):
+    segments = fi.segments.all()
+    all_segments = Segment.objects.all()
+
+    for seg in segments:
+        try:
+            short_seg = shortest_dist(all_segments, seg.source)
+            ShortDistanceSegment.objects.create(
+                segment=seg,
+                distance=Levenshtein.ratio(short_seg.db_seg_text, seg.source),
+                html_snippet=make_html(short_seg.db_seg_text, seg.source)
+            )
+        except ValueError:
+            pass

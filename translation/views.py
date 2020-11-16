@@ -97,13 +97,23 @@ class SegmentSOView(SegmentListView):
 class GetDiffHtmlView(LoginRequiredMixin, View):
     http_method_names = ["get"]
 
+    def get_object(self):
+        file_id = self.kwargs.get("file_id")
+        return ProjectFile.objects.get(pk=file_id)
+
     def get(self, request, source_text, *args, **kwargs):
-        all_segments = Segment.objects.all()
-        if all_segments.count() == 0:
+        fi = self.get_object()
+        fi_segments = fi.segments.all()
+        current_seg = fi.segments.get(source=source_text)
+        print(current_seg.short_distance_seg)
+        if fi_segments.count() == 0:
             return HttpResponse("No segment found in the database.")
+        if hasattr(current_seg, 'short_distance_seg'):
+            short_distance_seg = current_seg.short_distance_seg.first()
+            return HttpResponse(short_distance_seg.html_snippet)
 
         try:
-            closest_match = shortest_dist(all_segments, source_text)
+            closest_match = shortest_dist(fi_segments, source_text)
         except ValueError as err:
             return HttpResponse(err)
 
@@ -126,7 +136,7 @@ class SegmentCommitView(LoginRequiredMixin, View):
                 project.review_id.__str__(): Segment.REVIEWED,
                 project.sign_off_id.__str__(): Segment.SIGNED_OFF
             }
-            
+
             status_list = Segment.SEGMENT_STATUSES
             abbreviate = token_dict.get(commit_token)
 

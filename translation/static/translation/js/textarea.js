@@ -30,7 +30,7 @@ function send_commit(commit_url, csrf_token, text, e){
   xhr.send(text);
 }
 
-function retrieve_match(text) {
+function retrieve_match(search_url, text) {
 
   var xhr = new XMLHttpRequest();
 
@@ -40,7 +40,6 @@ function retrieve_match(text) {
     }
   }
 
-  search_url = "/search_match/" + text
   xhr.open("GET", search_url, true);
   xhr.send(text);
 }

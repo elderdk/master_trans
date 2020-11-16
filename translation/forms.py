@@ -11,9 +11,9 @@ class ProjectCreateForm(forms.ModelForm):
             'deadline': forms.DateInput(attrs={'type': 'date'})
         }
         fields = [
-            'name', 
-            'client', 
-            'deadline', 
+            'name',
+            'client',
+            'deadline',
             'translators',
             'reviewers',
             'soers'
@@ -39,5 +39,5 @@ class ProjectUpdateForm(forms.ModelForm):
 class SentenceParserForm(forms.ModelForm):
 
     class Meta:
-        model=SentenceParser
+        model = SentenceParser
         fields = ['default_regex', 'exclusion']
