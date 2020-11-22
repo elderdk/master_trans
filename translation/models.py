@@ -2,7 +2,7 @@ import re
 import uuid
 
 from django.db import models
-from users.models import User, Client
+from users.models import User
 from django.urls import reverse
 from datetime import date
 
@@ -14,11 +14,11 @@ REGEX_EXCLUSION = r'(?<!Mr.)(?<!Mrs.)(?<![^.,]")'
 def get_file_path(instance, filename):
     project = instance.project
     parent_folder = 'project_files'
-    client = project.client.name
+    user = project.user.username
     today = date.strftime(date.today(), '%Y%m')
     project_name = project.name
     filename = filename
-    return f"{parent_folder}/{client}/{today}/{project_name}/source/{filename}"
+    return f"{parent_folder}/{user}/{today}/{project_name}/source/{filename}"
 
 
 class Phase(models.Model):
@@ -35,13 +35,9 @@ class Project(models.Model):
                             verbose_name='Project Name')
     user = models.ForeignKey(User,
                              on_delete=models.CASCADE,
+                             related_name='user'
                              )
-    client = models.ForeignKey(Client,
-                               on_delete=models.SET_NULL,
-                               null=True,
-                               blank=False,
-                               related_name='client',
-                               )
+    
     deadline = models.DateTimeField(blank=True, null=True)
 
     translators = models.ManyToManyField(User, related_name='translators')

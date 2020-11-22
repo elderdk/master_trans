@@ -84,7 +84,7 @@ def create_file_and_segments(parser, fi_list, project_obj):
 def create_shortest_dist_segment(fi):
     segments = fi.segments.all()
     all_segments = Segment.objects.all()
-
+ 
     for seg in segments:
         try:
             short_seg = shortest_dist(all_segments, seg.source)

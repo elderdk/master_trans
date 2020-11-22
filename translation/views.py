@@ -173,14 +173,17 @@ class ProjectCreateView(LoginRequiredMixin, View):
     http_method_names = ["get", "post"]
 
     def get(self, request, *args, **kwargs):
-        form = self.form_classes
+        form = dict(self.form_classes)
+        form["project"] = ProjectCreateForm(
+                                        initial={'user': request.user}
+                                        )
         return render(request, self.template_name, {"form": form})
 
     def post(self, request, *args, **kwargs):
-
-        project_form = self.form_classes["project"](request.POST)
-        files_form = self.form_classes["files"](request.POST, request.FILES)
-        sentence_parser = self.form_classes["sentence_parser"](request.POST)
+        form = dict(self.form_classes)
+        project_form = form["project"](request.POST)
+        files_form = form["files"](request.POST, request.FILES)
+        sentence_parser = form["sentence_parser"](request.POST)
         all_forms = [project_form, files_form, sentence_parser]
 
         if not all_forms_valid(all_forms):

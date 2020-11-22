@@ -12,7 +12,7 @@ class ProjectCreateForm(forms.ModelForm):
         }
         fields = [
             'name',
-            'client',
+            'user',
             'deadline',
             'translators',
             'reviewers',
@@ -33,7 +33,7 @@ class ProjectUpdateForm(forms.ModelForm):
         widgets = {
             'deadline': forms.DateInput(attrs={'type': 'date'})
         }
-        fields = ['name', 'client', 'deadline']
+        fields = ['name', 'user', 'deadline']
 
 
 class SentenceParserForm(forms.ModelForm):

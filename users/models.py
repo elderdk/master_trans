@@ -17,13 +17,7 @@ class Role(models.Model):
         return self.role
 
 
-class Client(models.Model):
-    name = models.CharField(max_length=30)
-
-    def __str__(self):
-        return self.name
-
-
 class User(AbstractUser):
     expertise = models.ManyToManyField(Expertise, related_name='users')
     role = models.ManyToManyField(Role)
+    is_client = models.BooleanField(default=False, verbose_name='is_client')

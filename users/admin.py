@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import User, Expertise, Role, Client
+from .models import User, Expertise, Role
 
 # Register your models here.
 @admin.register(User)
@@ -12,8 +12,4 @@ class ExpertiseAdmin(admin.ModelAdmin):
 
 @admin.register(Role)
 class RoleAdmin(admin.ModelAdmin):
-    pass
-
-@admin.register(Client)
-class ClientAdmin(admin.ModelAdmin):
     pass
