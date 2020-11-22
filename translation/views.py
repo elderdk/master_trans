@@ -110,7 +110,10 @@ class GetDiffHtmlView(LoginRequiredMixin, View):
             return HttpResponse("No segment found in the database.")
         if hasattr(current_seg, 'short_distance_seg'):
             short_distance_seg = current_seg.short_distance_seg.first()
-            return HttpResponse(short_distance_seg.html_snippet)
+            if short_distance_seg is None:
+                return HttpResponse("No segment found.")
+            else:
+                return HttpResponse(short_distance_seg.html_snippet)
 
         try:
             closest_match = shortest_dist(fi_segments, source_text)
