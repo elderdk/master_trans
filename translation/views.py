@@ -20,9 +20,10 @@ from .helpers import (
     add_target_html,
     all_forms_valid,
     is_all_supported,
-    create_file_and_segments,
     FILE_NOT_SUPPORTED_MSG,
 )
+
+from .seg_creators import create_file_and_segments
 
 
 # Create your views here.
@@ -203,10 +204,9 @@ class ProjectCreateView(LoginRequiredMixin, View):
         project_form.save()
         parser = sentence_parser.save(commit=False)
         parser.project = project
-
-        create_file_and_segments(parser, fi_list, project)
-
         sentence_parser.save()
+
+        create_file_and_segments(parser, fi_list, project)      
 
         return redirect(self.success_url)
 

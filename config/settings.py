@@ -158,5 +158,6 @@ else:
 # Supported file types
 
 SUPPORTED_FILE_TYPES = [
-    'txt'
+    'txt',
+    'docx'
 ]

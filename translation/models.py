@@ -1,7 +1,7 @@
-import re
 import uuid
 
 from django.db import models
+from django.db.models.fields import related
 from users.models import User
 from django.urls import reverse
 from datetime import date
@@ -37,7 +37,7 @@ class Project(models.Model):
                              on_delete=models.CASCADE,
                              related_name='user'
                              )
-    
+
     deadline = models.DateTimeField(blank=True, null=True)
 
     translators = models.ManyToManyField(User, related_name='translators')
@@ -92,6 +92,7 @@ class Segment(models.Model):
     target = models.TextField(blank=True, null=True)
     created_time = models.DateTimeField(auto_now_add=True)
     modified_time = models.DateTimeField(auto_now=True)
+    para_num = models.IntegerField(blank=True, null=True)
 
     NOT_TRANSLATED = 'NT'
     DRAFT = 'DR'
@@ -131,18 +132,6 @@ class SentenceParser(models.Model):
     exclusion = models.CharField(max_length=255,
                                  default=REGEX_EXCLUSION)
 
-    def create_segments(self, fi):
-        with fi.file.open(mode='r') as f:
-            regex = re.compile(self.full_regex, flags=re.UNICODE)
-            sentences = regex.split(f.read())
-
-            for num, sentence in enumerate(sentences, start=1):
-                Segment.objects.create(
-                    file=fi,
-                    source=sentence,
-                    seg_id=num
-                )
-
     @property
     def full_regex(self):
         return self.exclusion + self.default_regex
@@ -155,3 +144,26 @@ class ShortDistanceSegment(models.Model):
                                 )
     distance = models.FloatField()
     html_snippet = models.TextField()
+
+
+class Paragraph(models.Model):
+    projectfile = models.ForeignKey(
+        ProjectFile, 
+        on_delete=models.CASCADE,
+        related_name='paragraphs'
+        )
+    para_num = models.IntegerField()
+    default_wrapper = models.TextField()
+
+    def __str__(self):
+        return self.projectfile.name + f"({self.para_num})"
+
+
+class Tag(models.Model):
+    paragraph = models.ForeignKey(
+        Paragraph, 
+        on_delete=models.CASCADE,
+        related_name='tags'
+        )
+    in_file_id = models.IntegerField(default=0)
+    tag_wrapper = models.TextField(default=0)
