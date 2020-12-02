@@ -140,12 +140,13 @@ class DocxSegmentCreator:
         sentences = regex.split(sentences)
 
         for sentence in sentences:
-            seg_id = Segment.objects.filter(file=fi).count() + 1
-            Segment.objects.create(
-                file=fi,
-                source=sentence,
-                seg_id=seg_id
-            )
+            if sentence != '':
+                seg_id = Segment.objects.filter(file=fi).count() + 1
+                Segment.objects.create(
+                    file=fi,
+                    source=sentence,
+                    seg_id=seg_id
+                )
 
     def _get_string_with_tags(self, para, tags):
 
