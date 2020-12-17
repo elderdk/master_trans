@@ -105,8 +105,8 @@ class GetDiffHtmlView(LoginRequiredMixin, View):
     def get(self, request, source_text, *args, **kwargs):
         fi = self.get_object()
         fi_segments = fi.segments.all()
-        current_seg = fi.segments.get(source=source_text)
-        print(current_seg.short_distance_seg)
+        current_seg = fi.segments.filter(source=source_text).first()
+
         if fi_segments.count() == 0:
             return HttpResponse("No segment found in the database.")
         if hasattr(current_seg, 'short_distance_seg'):
@@ -206,7 +206,7 @@ class ProjectCreateView(LoginRequiredMixin, View):
         parser.project = project
         sentence_parser.save()
 
-        create_file_and_segments(parser, fi_list, project)      
+        create_file_and_segments(parser, fi_list, project)
 
         return redirect(self.success_url)
 
@@ -301,7 +301,9 @@ class GenerateTargetView(LoginRequiredMixin, UserPassesTestMixin, View):
 
         projectfile = self.get_object()
 
-        download_file = TargetGenerator()
-        download_file = download_file.generate_txt(projectfile)
+        download_file = TargetGenerator(projectfile)
+        prepared_file = download_file.generate_target()
 
-        return FileResponse(open(str(download_file), "rb"), as_attachment=True)
+        return FileResponse(
+            open(prepared_file.as_posix(), "rb"), as_attachment=True
+            )

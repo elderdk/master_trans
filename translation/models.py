@@ -1,14 +1,14 @@
 import uuid
+import pickle
 
 from django.db import models
-from django.db.models.fields import related
 from users.models import User
 from django.urls import reverse
 from datetime import date
 
 
-DEFAULT_REGEX = r"(?<=[\"'.])(?<![s])\s+"
-REGEX_EXCLUSION = r'(?<!Mr.)(?<!Mrs.)(?<![^.,]")'
+DEFAULT_REGEX = r"(?<=[\"'.>])(?<![s])\s+"
+REGEX_EXCLUSION = r'(?<!Mr.)(?<!Mrs.)(?<!endtag>)(?<![^.,]")'
 
 
 def get_file_path(instance, filename):
@@ -148,12 +148,22 @@ class ShortDistanceSegment(models.Model):
 
 class Paragraph(models.Model):
     projectfile = models.ForeignKey(
-        ProjectFile, 
+        ProjectFile,
         on_delete=models.CASCADE,
         related_name='paragraphs'
         )
     para_num = models.IntegerField()
-    default_wrapper = models.TextField()
+    hex_placeholder = models.CharField(max_length=32, blank=True, null=True)
+
+    _wrapper = models.BinaryField(null=True, blank=True)
+
+    def set_tag(self, data):
+        self._wrapper = pickle.dumps(data)
+
+    def get_tag(self):
+        return pickle.loads(self._wrapper)
+
+    wrapper = property(get_tag, set_tag)
 
     def __str__(self):
         return self.projectfile.name + f"({self.para_num})"
@@ -161,9 +171,19 @@ class Paragraph(models.Model):
 
 class Tag(models.Model):
     paragraph = models.ForeignKey(
-        Paragraph, 
+        Paragraph,
         on_delete=models.CASCADE,
         related_name='tags'
         )
     in_file_id = models.IntegerField(default=0)
-    tag_wrapper = models.TextField(default=0)
+    source_text = models.TextField(blank=True, null=True)
+
+    _wrapper = models.BinaryField(null=True, blank=True)
+
+    def set_tag(self, data):
+        self._wrapper = pickle.dumps(data)
+
+    def get_tag(self):
+        return pickle.loads(self._wrapper)
+
+    wrapper = property(get_tag, set_tag)

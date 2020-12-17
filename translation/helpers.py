@@ -4,8 +4,7 @@ import re
 import diff_match_patch
 import Levenshtein
 from django.conf import settings
-
-from .models import Segment, ProjectFile, ShortDistanceSegment
+from bs4 import Tag, NavigableString
 
 
 SEGMENT_MATCH_THRESH = 0.7
@@ -71,3 +70,25 @@ def is_all_supported(fi_list):
 
 def get_ext(fi):
     return fi.file.path.split('.')[-1]
+
+
+def get_docu_xml(file_list):
+    pattern = re.compile('word/document\d?\.xml')
+    for fi in file_list:
+        if re.match(pattern, fi):
+            return fi
+
+
+def clone(el):
+    if isinstance(el, NavigableString):
+        return type(el)(el)
+
+    copy = Tag(None, el.builder, el.name, el.namespace, el.nsprefix)
+    # work around bug where there is no builder set
+    # https://bugs.launchpad.net/beautifulsoup/+bug/1307471
+    copy.attrs = dict(el.attrs)
+    for attr in ('can_be_empty_element', 'hidden'):
+        setattr(copy, attr, getattr(el, attr))
+    for child in el.contents:
+        copy.append(clone(child))
+    return copy

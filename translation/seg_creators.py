@@ -2,14 +2,15 @@ import re
 import uuid
 from zipfile import ZipFile
 import Levenshtein
+import sys
 
 from bs4 import BeautifulSoup
 
 from .models import Segment, ProjectFile, ShortDistanceSegment, Paragraph, Tag
-from .helpers import shortest_dist, make_html, get_ext
+from .helpers import shortest_dist, make_html, get_ext, get_docu_xml, clone
+from django.db.models import Q
 
-
-DEFAULT_P = "<w:p></w:p>"
+sys.setrecursionlimit(55000)
 
 
 def create_file_and_segments(parser, fi_list, project_obj):
@@ -44,7 +45,9 @@ class CreateSegment:
                 short_seg = shortest_dist(all_segments, seg.source)
                 ShortDistanceSegment.objects.create(
                     segment=seg,
-                    distance=Levenshtein.ratio(short_seg.db_seg_text, seg.source),
+                    distance=Levenshtein.ratio(
+                                            short_seg.db_seg_text, seg.source
+                                            ),
                     html_snippet=make_html(short_seg.db_seg_text, seg.source)
                 )
             except ValueError:
@@ -58,146 +61,188 @@ class CreateSegment:
         }
 
         return ext_dict.get(self.ext)
-
+    
 
 class TextSegmentCreator:
-    def __init__(self, fi, parser):
-        self.fi = fi
+    def __init__(self, projectfile, parser):
+        self.pf = projectfile
         self.parser = parser
 
     def create_segments(self):
-        fi = self.fi
+        pf = self.pf
         parser = self.parser
-        with fi.file.open(mode='r') as f:
+        with pf.file.open(mode='r') as f:
             regex = re.compile(parser.full_regex, flags=re.UNICODE)
             sentences = regex.split(f.read())
 
             for num, sentence in enumerate(sentences, start=1):
                 Segment.objects.create(
-                    file=fi,
+                    file=pf,
                     source=sentence,
                     seg_id=num
                 )
 
 
+class XMLParser:
+    def r(run, para_obj, starting_id):
+
+        def in_skip_list(run):
+            rpr = list(run.children)[0]
+            rpr_children = list(rpr.children)
+
+            if len(rpr_children) == 1 and rpr_children[0].name == 'rFonts':
+                return True
+            else:
+                return False
+
+        found_tags = list()
+        
+        for child in run.children:
+            if child.name in ['rPr'] and not in_skip_list(run):
+                tag = Tag.objects.create(
+                        paragraph=para_obj,
+                        in_file_id=starting_id,
+                        source_text=run.get_text(),
+                        wrapper=clone(child)
+                    )
+                starting_id += 1
+                found_tags.append(tag)
+        return found_tags
+
+    def hyperlink(run, para_obj, starting_id):
+        found_tags = list()
+        
+        source_text = run.text
+        
+        hplink = clone(run)
+        hplink_copy = clone(run)
+
+        while hplink.contents != []:
+            hplink.contents[0].decompose()
+
+        for child in hplink_copy.children:
+            if child.name != 't':
+                hplink.append(child)
+        tag = Tag.objects.create(
+                paragraph=para_obj,
+                in_file_id=starting_id,
+                source_text=source_text,
+                wrapper=hplink
+            )
+
+        found_tags.append(tag)
+
+        return found_tags
+
+
 class DocxSegmentCreator:
-    def __init__(self, fi, parser):
-        self.fi = fi
+    def __init__(self, projectfile, parser):
+        self.pf = projectfile
         self.parser = parser
+        self.soup = self._get_soup()
 
-    def _get_soup(self, fi):
-        with ZipFile(fi.file.path) as zip:
-            with zip.open("word/document.xml") as docu_xml:
+    def _get_soup(self):
+        pf = self.pf
+        with ZipFile(pf.file.path) as zip:
+            file_list = zip.namelist()
+            docu_xml = get_docu_xml(file_list)
+            with zip.open(docu_xml) as docu_xml:
                 xml = docu_xml.read()
-                self.soup = BeautifulSoup(xml, "lxml-xml")
-                self.soup_str = str(self.soup)
+                soup = BeautifulSoup(xml, "lxml-xml")
+        return soup
 
-    def _insert_xml(self, outer, inner):
-        inner = str(inner)
-        if inner[-1] == ' ':
-            inner = inner[:-1]
-        index = outer.find("</")
-        return outer[:index] + inner + outer[index:]
+    def _create_tags(self, para_obj, para) -> Tag:
 
-    def _insert_html_tag(self, outer, inner):
-        inner = str(inner).strip()
-        index = outer.find("<end")
-        return outer[:index] + inner + outer[index:]
+        found_tags = list()
 
-    def _get_pPr_xml(self, para):
-        return para.find("w:pPr")
+        parse_dict = {
+            'r': XMLParser.r,
+            'hyperlink': XMLParser.hyperlink
+        }
 
-    def _get_tag_xml(self, para):
-        runs = para.find_all("w:r")
-        results = list()
-        for run in runs:
-            rpr = run.find("w:rPr")
-            if str(rpr) != "<w:rPr/>":
-                results.append((rpr, run.get_text()))
+        for child in para.children:
+            starting_id = Tag.objects.filter(
+                Q(paragraph__projectfile=self.pf)
+                ).count() + 1
+            xml_parser = parse_dict.get(child.name)
+            tags = xml_parser(child, para_obj, starting_id)
+            found_tags.extend(tags)
 
-        return results
+        return found_tags
 
-    def _create_tag_objects(self, para, para_object, fi):
-        tags = self._get_tag_xml(para)
-        tag_num = Tag.objects.filter(paragraph__projectfile=fi).count() + 1
-        for tag in tags:
-            if tag[1] == '':
-                continue
-            new_tag = Tag.objects.create(paragraph=para_object)
-            new_tag.in_file_id = tag_num
-            new_tag.tag_wrapper = str(tag[0])
-            new_tag.save()
-            tag_num += 1
+    def _get_p_wrapper(self, para):
+        pa = clone(para)
+        while pa.contents != []:
+            pa.contents[0].decompose()
 
-        return tags
+        for child in para.children:
+            if child.name not in ['r', 'hyperlink']:
+                pa.append(child)
 
-    def _get_string(self, para):
-        return para.get_text().strip()
+        return pa
 
-    def _create_segment_objects(self, sentences, parser, fi):
+    def _get_paras(self):
+        return self.soup.find_all('w:p')
 
-        regex = re.compile(parser.full_regex, flags=re.UNICODE)
-        sentences = regex.split(sentences)
+    def _replace_para_with_hex(self, para, hex) -> BeautifulSoup:
+        para.replace_with(hex)
 
-        for sentence in sentences:
-            if sentence != '':
-                seg_id = Segment.objects.filter(file=fi).count() + 1
-                Segment.objects.create(
-                    file=fi,
-                    source=sentence,
-                    seg_id=seg_id
-                )
+    def _create_para(self, para, para_num, hex) -> Paragraph:
 
-    def _get_string_with_tags(self, para, tags):
-
-        sentences = self._get_string(para)
-
-        if tags == []:
-            return sentences
-        elif len(tags) > 0 and sentences == '':
-            return '\n'
-        else:
-            for tag in tags:
-                text = tag[1]
-
-                if text == '':
-                    continue
-
-                text_in_tag = self._insert_html_tag(" <tag><endtag> ", text)
-
-                pattern = re.compile(f"[^>]{text}")
-                sentences = re.sub(pattern, text_in_tag, sentences, count=1)
-
-            return sentences
-
-    def _get_empty_p(self, para):
-        pPr = self._get_pPr_xml(para)
-        empty_p = self._insert_xml(DEFAULT_P, pPr)
-        return empty_p
-
-    def _create_para_object(self, fi, para_num, para, parser):
         para_object = Paragraph.objects.create(
-                                    projectfile=fi,
-                                    para_num=para_num,
-                                    default_wrapper=self._get_empty_p(para)
-                                    )
+                projectfile=self.pf,
+                para_num=para_num,
+                hex_placeholder=hex,
+                wrapper=self._get_p_wrapper(para)
+            )
 
-        tags = self._create_tag_objects(para, para_object, fi)
-        sentences = self._get_string_with_tags(para, tags)
+        return para_object
 
-        if sentences.strip() != '':
-            self._create_segment_objects(sentences, parser, fi)
-        else:
-            pass
+    def _wrap_tag(self, id, text):
+        return f"<tag id=\"{id}\">{text}<endtag>"
+
+    def _create_segs(self, para, tags, parser):
+        strings = para.text
+        starting_id = Segment.objects.filter(file=self.pf).count() + 1
+        regex = re.compile(parser.full_regex, flags=re.UNICODE)
+
+        for tag in tags:
+            text = tag.source_text
+            if text in strings:
+                strings = strings.replace(
+                    text, self._wrap_tag(tag.in_file_id, text), 1
+                    )
+
+        sentences = regex.split(strings)
+        for sentence in sentences:
+
+            if sentence != '':
+                Segment.objects.create(
+                    seg_id=starting_id,
+                    file=self.pf,
+                    source=sentence,
+                )
+                starting_id += 1
+
+    def _should_parse(self, para):
+        for pc in para.children:
+            for c in pc.children:
+                if c.name in ['drawing']:
+                    return False
+        return True
 
     def create_segments(self):
-        fi = self.fi
         parser = self.parser
-
-        self._get_soup(fi)
-        paras = self.soup.find_all("w:p")
+        paras = self._get_paras()
 
         for para_num, para in enumerate(paras, start=1):
-            self._create_para_object(fi, para_num, para, parser)       # return string with tags already implemented. (create tags here as well)
+            hex = uuid.uuid4().hex
 
-        # self.soup_str = self.soup_str.replace(str(para), uuid.uuid4().hex)
+            if not self._should_parse(para):
+                continue
+
+            para_obj = self._create_para(para, para_num, hex)
+            tags = self._create_tags(para_obj, para)
+            self._create_segs(para, tags, parser)
+
+            self._replace_para_with_hex(para, hex)

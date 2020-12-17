@@ -4,9 +4,7 @@ from zipfile import ZipFile
 
 from bs4 import BeautifulSoup
 
-# from .models import Paragraph, Tag
-
-
+from .models import Paragraph, Tag
 
 DEFAULT_P = "<w:p></w:p>"
 
@@ -74,7 +72,7 @@ class DocxSegmentCreator:
             
             self._create_tag_objects(para, para_object)
             
-            string = self._get_string_with_tags(para, tags)             # will be parsed with parser.regex, then each sentence will be a segment with the paragraph number.
+            self._get_string_with_tags(para, tags)            
 
             self.soup_str = self.soup_str.replace(str(para), uuid.uuid4().hex)
 
