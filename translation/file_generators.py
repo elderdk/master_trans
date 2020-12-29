@@ -1,11 +1,14 @@
 from pathlib import Path
-import re
 from shutil import copyfile
 from zipfile import ZipFile
+import os
 
+from bs4 import Tag as SoupTag
 from django.db.models import Q
 
-from translation.models import Paragraph, Segment, Tag
+from translation.models import Paragraph, Segment
+
+from .helpers import get_docu_xml
 
 
 class TargetGenerator:
@@ -94,166 +97,164 @@ class TxtGenerator(TargetGenerator):
 
 class DocxGenerator(TargetGenerator):
 
-    def __init__(self, fi):
-        self.projectfile = fi
-        self.doc_xml_file = Path(fi.file.path).parents[1].joinpath('.docx_xml')
-        self.p_wrap = "<w:p></w:p>"
-        self.r_wrap = "<w:r></w:r>"
-        self.empty_rpr_wrap = "</rPr>"
-        self.t_wrap = "<w:t></w:t>"
+    def __init__(self, pf):
+        self.pf = pf
+        self.target_xml = pf.processed_soup
 
-    def _get_all_paras(self):
-        pf = self.projectfile
-        all_paras = Paragraph.objects.filter(
-                                            projectfile=pf
-                                            ).order_by('para_num')
-        return all_paras
+    #     self.p_wrap = "<w:p></w:p>"
+    #     self.r_wrap = "<w:r></w:r>"
+    #     self.empty_rpr_wrap = "</rPr>"
+    #     self.t_wrap = "<w:t></w:t>"
+
+    # def _get_all_paras(self):
+    #     pf = self.projectfile
+    #     all_paras = Paragraph.objects.filter(
+    #                                         projectfile=pf
+    #                                         ).order_by('para_num')
+    #     return all_paras
 
     def _get_all_para_segs(self, para):
         all_para_segs = Segment.objects.filter(
-            Q(file=self.projectfile) & Q(para_num=para.para_num)
+            Q(file=self.pf) & Q(para_num=para.para_num)
         ).order_by('seg_id')
         return all_para_segs
 
-    def _get_source_xml(self):
-        with self.doc_xml_file.open(mode='r') as f:
-            xml_content = f.read()
-        return xml_content
 
-    def _insert_xml(self, outer, inner):
-        inner = str(inner)
-        if inner[-1] == ' ':
-            inner = inner[:-1]
-        index = outer.rfind("</")
-        return outer[:index] + inner + outer[index:]
+    # def _insert_xml(self, outer, inner):
+    #     inner = str(inner)
+    #     if inner[-1] == ' ':
+    #         inner = inner[:-1]
+    #     index = outer.rfind("</")
+    #     return outer[:index] + inner + outer[index:]
 
-    def _insert_rpr(self, xml, rpr):
-        index = xml.find("<w:p>") + 6
-        return xml[:index] + rpr + xml[index:]
+    # def _insert_rpr(self, xml, rpr):
+    #     index = xml.find("<w:p>") + 6
+    #     return xml[:index] + rpr + xml[index:]
 
-    def _get_end_pos(self, string):
-        pattern = re.compile('<endtag>')
-        end_pos = re.search(pattern, string).end()
-        return end_pos
+    # def _get_end_pos(self, string):
+    #     pattern = re.compile('<endtag>')
+    #     end_pos = re.search(pattern, string).end()
+    #     return end_pos
 
-    def _get_tag_id(self, string):
-        pattern = re.compile('<tag id=\"(\d+)\">')
-        result = re.search(pattern, string)
-        id_num = result.group(1)
-        return id_num
+    # def _get_tag_id(self, string):
+    #     pattern = re.compile('<tag id=\"(\d+)\">')
+    #     result = re.search(pattern, string)
+    #     id_num = result.group(1)
+    #     return id_num
 
-    def _parse_string(self, string):
-        open_tag_re = re.compile('<tag id=\"\d+\">')
-        openning_tag = re.search(open_tag_re, string).end()
+    # def _parse_string(self, string):
+    #     open_tag_re = re.compile('<tag id=\"\d+\">')
+    #     openning_tag = re.search(open_tag_re, string).end()
 
-        end_tag_re = re.compile('<endtag>')
-        ending_tag = re.search(end_tag_re, string).start()
+    #     end_tag_re = re.compile('<endtag>')
+    #     ending_tag = re.search(end_tag_re, string).start()
 
-        parsed_string = string[openning_tag:ending_tag]
-        return parsed_string
+    #     parsed_string = string[openning_tag:ending_tag]
+    #     return parsed_string
 
-    def _get_tag(self, tag_id):
-        pf = self.projectfile
-        tag = Tag.objects.filter(
-            Q(paragraph__projectfile=pf) & Q(in_file_id=tag_id)
-        ).first()
-        return tag
+    # def _get_tag(self, tag_id):
+    #     pf = self.projectfile
+    #     tag = Tag.objects.filter(
+    #         Q(paragraph__projectfile=pf) & Q(in_file_id=tag_id)
+    #     ).first()
+    #     return tag
 
-    def _wrap_in_xml(self, translation, tag_pos, no_tag=False):
+    # def _wrap_in_xml(self, translation, tag_pos, no_tag=False):
 
-        if no_tag is True:
-            str_to_wrap = translation
-        else:
-            str_to_wrap = translation[:tag_pos]
+    #     if no_tag is True:
+    #         str_to_wrap = translation
+    #     else:
+    #         str_to_wrap = translation[:tag_pos]
 
-        wrap_sequence = (
-            self.t_wrap,
-            self.r_wrap
-        )
+    #     wrap_sequence = (
+    #         self.t_wrap,
+    #         self.r_wrap
+    #     )
 
-        if str_to_wrap != '':
-            # this is currently creating a run for each sentence if
-            # there's no tag in the paragraph. should be fixed.
-            xml_string = str_to_wrap
+    #     if str_to_wrap != '':
+    #         # this is currently creating a run for each sentence if
+    #         # there's no tag in the paragraph. should be fixed.
+    #         xml_string = str_to_wrap
 
-            for seq in wrap_sequence:
-                xml_string = self._insert_xml(seq, xml_string)
-            translation = translation.replace(str_to_wrap, '')
-            rpr_wrap = self.empty_rpr_wrap
+    #         for seq in wrap_sequence:
+    #             xml_string = self._insert_xml(seq, xml_string)
+    #         translation = translation.replace(str_to_wrap, '')
+    #         rpr_wrap = self.empty_rpr_wrap
 
-        else:
-            end_pos = self._get_end_pos(translation)
-            tagged_string = translation[:end_pos]
-            tag_id = self._get_tag_id(tagged_string)
-            xml_string = self._parse_string(tagged_string)
+    #     else:
+    #         end_pos = self._get_end_pos(translation)
+    #         tagged_string = translation[:end_pos]
+    #         tag_id = self._get_tag_id(tagged_string)
+    #         xml_string = self._parse_string(tagged_string)
 
-            for seq in wrap_sequence:
-                xml_string = self._insert_xml(seq, xml_string)
-            translation = translation.replace(tagged_string, '')
+    #         for seq in wrap_sequence:
+    #             xml_string = self._insert_xml(seq, xml_string)
+    #         translation = translation.replace(tagged_string, '')
 
-            rpr_wrap = self._get_tag(tag_id)
+    #         rpr_wrap = self._get_tag(tag_id)
 
-        result = self._insert_rpr(xml_string, rpr_wrap)
+    #     result = self._insert_rpr(xml_string, rpr_wrap)
 
-        return result, translation
+    #     return result, translation
 
-    def _convert_to_xml(self, translation):
-        pattern = re.compile('<tag id=\"\d+"\>')
-        xml_string = str()
-        no_tag = bool()
-        while len(translation) > 0:
-            tag_pos = re.search(pattern, translation)
-
-            if tag_pos:
-                tag_pos = tag_pos.start()
-                no_tag = False
-            else:
-                tag_pos = 0
-                no_tag = True
-
-            result, translation = self._wrap_in_xml(
-                translation,
-                tag_pos,
-                no_tag
-                )
-            xml_string += result
-
-        return xml_string
+    def _add_namespace(self, namespace, tag):
+        tag.name = namespace + ':' + tag.name
+        for child in tag.children:
+            self._add_namespace(namespace, child)
 
     def _create_para_xml(self, para, segments):
-        para_xml = ' '.join([
-                self._convert_to_xml(seg.target) for seg in segments
+        target_text = ' '.join([
+                seg.target
+                if seg.target is not None
+                else seg.source
+                for seg in segments
             ])
-        para_ppr = para.wrapper
+        new_r_tag = SoupTag(name='w:r')
+        new_rpr_tag = SoupTag(name='w:rPr')
+        new_tag = SoupTag(name="w:t")
+        new_tag.append(target_text)
+        new_r_tag.append(new_rpr_tag)
+        new_r_tag.append(new_tag)
 
-        para_xml = self._insert_xml(para_ppr, para_xml)
+        wrapper = para.wrapper
+        self._add_namespace('w', wrapper)
+        wrapper.append(new_r_tag)
 
-        return para_xml
+        return str(wrapper)
 
     def copy_source_to_target(self):
-        pf = self.projectfile
+        pf = self.pf
         source_path = pf.file.path
 
         new_file_name = self.get_new_file_name(pf)
         target_folder = self.make_target_folder(pf)
-        new_file = target_folder.joinpath(new_file_name)
+        new_file = target_folder.joinpath(new_file_name).as_posix()
 
         copyfile(source_path, new_file)
 
         return new_file
 
-    def insert_xml_to_docx(self, new_file, source_xml):
-        docu_xml = re.compile('word/document\d?\.xml')
-        with ZipFile(new_file.as_posix(), mode='w') as zip:
-            with zip.open(docu_xml) as docu_xml:
-                docu_xml.write(source_xml)
+    def insert_xml_to_docx(self, original_file, source_xml):
+        new_file = original_file + '.tmp'
+        oldzip = ZipFile(original_file, mode='r')
+        newzip = ZipFile(new_file, mode='w')
 
-        return new_file
+        docu_xml = get_docu_xml(oldzip.namelist())
+        for file in oldzip.infolist():
+            buffer = oldzip.read(file.filename)
+            if file.filename != docu_xml:
+                newzip.writestr(file.filename, buffer)
+        newzip.writestr(docu_xml, source_xml)
+        oldzip.close()
+        newzip.close()
+        os.remove(original_file)
+        os.rename(new_file, original_file)
+
+        return Path(original_file)
 
     def generate(self):
-        pf = self.projectfile
-        source_xml = self._get_source_xml()
-        paras = Paragraph.objects.filter(projectfile=pf)
+
+        paras = Paragraph.objects.filter(projectfile=self.pf)
 
         for para in paras:
             hex_placeholder = para.hex_placeholder
@@ -261,12 +262,13 @@ class DocxGenerator(TargetGenerator):
 
             para_xml = self._create_para_xml(para, segments)
 
-            source_xml = source_xml.replace(
-                                            hex_placeholder, para_xml
-                                            )
+            self.target_xml = self.target_xml.replace(
+                                                    hex_placeholder, para_xml
+                                                    )
 
         new_file = self.copy_source_to_target()
 
-        new_file = self.insert_xml_to_docx(new_file, source_xml)
-
+        new_file = self.insert_xml_to_docx(
+                                        new_file, self.target_xml
+                                        )
         return new_file

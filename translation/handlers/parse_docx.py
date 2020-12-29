@@ -1,58 +1,144 @@
-from pathlib import Path
 import re
-from shutil import copyfile
+import uuid
 from zipfile import ZipFile
+from collections import namedtuple
 
-from django.db.models import Q
-from bs4 import BeautifulSoup
-
-# from ..file_generators import TargetGenerator
-# from ..models import Paragraph, Segment, Tag, SentenceParser
-# from ..helpers import get_docu_xml
+from bs4 import BeautifulSoup, Tag
+from ..helpers import get_docu_xml, clone
+from ..models import Paragraph, Segment
 
 
-# class DocxParser(TargetGenerator):
-
-#     def __init__(self, pf):
-#         self.projectfile = pf
-#         self.soup = self._get_soup()
-#         self.parser = SentenceParser.objects.filter(
-#             project=pf
-#             ).first().full_regex()
-
-#     def _get_soup(self):
-#         pf = self.projectfile
-
-#         with ZipFile(pf.file.path) as zip:
-#             file_list = zip.namelist()
-#             docu_xml = get_docu_xml(file_list)
-#             with zip.open(docu_xml) as docu_xml:
-#                 xml = docu_xml.read()
-#                 soup = BeautifulSoup(xml, "lxml-xml")
-#         return soup
-
-#     def _get_paras(self):
-#         return self.soup.find_all("w:p")
-
-#     def _get_para_wrapper(self, para):
-#         pass
-
-from bs4 import BeautifulSoup
+ParaTuple = namedtuple('ParaTuple', 'clone hex'.split())
 
 
-def reset(n):
-    of365_sample = r"""
-    <?xml version="1.0" encoding="utf-8"?><w:document mc:Ignorable="w14 w15 wp14" xmlns:m="http://schemas.openxmlformats.org/officeDocument/2006/math" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:w10="urn:schemas-microsoft-com:office:word" xmlns:w14="http://schemas.microsoft.com/office/word/2010/wordml" xmlns:w15="http://schemas.microsoft.com/office/word/2012/wordml" xmlns:wne="http://schemas.microsoft.com/office/word/2006/wordml" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing" xmlns:wp14="http://schemas.microsoft.com/office/word/2010/wordprocessingDrawing" xmlns:wpc="http://schemas.microsoft.com/office/word/2010/wordprocessingCanvas" xmlns:wpg="http://schemas.microsoft.com/office/word/2010/wordprocessingGroup" xmlns:wpi="http://schemas.microsoft.com/office/word/2010/wordprocessingInk" xmlns:wps="http://schemas.microsoft.com/office/word/2010/wordprocessingShape"><w:body><w:p w:rsidP="438FBAC8" wp14:paraId="3B92C830" wp14:textId="0384D974" xmlns:wp14="http://schemas.microsoft.com/office/word/2010/wordml"><w:pPr><w:rPr><w:noProof w:val="0"/><w:lang w:val="en-US"/></w:rPr></w:pPr><w:bookmarkStart w:id="0" w:name="_GoBack"/><w:bookmarkEnd w:id="0"/><w:r w:rsidR="438FBAC8" w:rsidRPr="438FBAC8"><w:rPr><w:noProof w:val="0"/><w:lang w:val="en-US"/></w:rPr><w:t>This</w:t></w:r><w:r w:rsidR="438FBAC8" w:rsidRPr="438FBAC8"><w:rPr><w:noProof w:val="0"/><w:lang w:val="en-US"/></w:rPr><w:t xml:space="preserve"> </w:t></w:r><w:r w:rsidR="438FBAC8" w:rsidRPr="438FBAC8"><w:rPr><w:noProof w:val="0"/><w:lang w:val="en-US"/></w:rPr><w:t>is</w:t></w:r><w:r w:rsidR="438FBAC8" w:rsidRPr="438FBAC8"><w:rPr><w:noProof w:val="0"/><w:lang w:val="en-US"/></w:rPr><w:t xml:space="preserve"> </w:t></w:r><w:r w:rsidR="438FBAC8" w:rsidRPr="438FBAC8"><w:rPr><w:noProof w:val="0"/><w:lang w:val="en-US"/></w:rPr><w:t>a</w:t></w:r><w:r w:rsidR="438FBAC8" w:rsidRPr="438FBAC8"><w:rPr><w:noProof w:val="0"/><w:lang w:val="en-US"/></w:rPr><w:t xml:space="preserve"> </w:t></w:r><w:r w:rsidR="438FBAC8" w:rsidRPr="438FBAC8"><w:rPr><w:noProof w:val="0"/><w:lang w:val="en-US"/></w:rPr><w:t>test</w:t></w:r><w:r w:rsidR="438FBAC8" w:rsidRPr="438FBAC8"><w:rPr><w:noProof w:val="0"/><w:lang w:val="en-US"/></w:rPr><w:t xml:space="preserve"> .</w:t></w:r><w:r w:rsidR="438FBAC8" w:rsidRPr="438FBAC8"><w:rPr><w:noProof w:val="0"/><w:lang w:val="en-US"/></w:rPr><w:t>docx</w:t></w:r><w:r w:rsidR="438FBAC8" w:rsidRPr="438FBAC8"><w:rPr><w:noProof w:val="0"/><w:lang w:val="en-US"/></w:rPr><w:t xml:space="preserve"> </w:t></w:r><w:r w:rsidR="438FBAC8" w:rsidRPr="438FBAC8"><w:rPr><w:noProof w:val="0"/><w:lang w:val="en-US"/></w:rPr><w:t>file</w:t></w:r><w:r w:rsidR="438FBAC8" w:rsidRPr="438FBAC8"><w:rPr><w:noProof w:val="0"/><w:lang w:val="en-US"/></w:rPr><w:t xml:space="preserve">. </w:t></w:r><w:r w:rsidR="438FBAC8" w:rsidRPr="438FBAC8"><w:rPr><w:noProof w:val="0"/><w:lang w:val="en-US"/></w:rPr><w:t>This</w:t></w:r><w:r w:rsidR="438FBAC8" w:rsidRPr="438FBAC8"><w:rPr><w:noProof w:val="0"/><w:lang w:val="en-US"/></w:rPr><w:t xml:space="preserve"> </w:t></w:r><w:r w:rsidR="438FBAC8" w:rsidRPr="438FBAC8"><w:rPr><w:noProof w:val="0"/><w:lang w:val="en-US"/></w:rPr><w:t>is</w:t></w:r><w:r w:rsidR="438FBAC8" w:rsidRPr="438FBAC8"><w:rPr><w:noProof w:val="0"/><w:lang w:val="en-US"/></w:rPr><w:t xml:space="preserve"> </w:t></w:r><w:r w:rsidR="438FBAC8" w:rsidRPr="438FBAC8"><w:rPr><w:noProof w:val="0"/><w:lang w:val="en-US"/></w:rPr><w:t>the</w:t></w:r><w:r w:rsidR="438FBAC8" w:rsidRPr="438FBAC8"><w:rPr><w:noProof w:val="0"/><w:lang w:val="en-US"/></w:rPr><w:t xml:space="preserve"> </w:t></w:r><w:r w:rsidR="438FBAC8" w:rsidRPr="438FBAC8"><w:rPr><w:noProof w:val="0"/><w:lang w:val="en-US"/></w:rPr><w:t>first</w:t></w:r><w:r w:rsidR="438FBAC8" w:rsidRPr="438FBAC8"><w:rPr><w:noProof w:val="0"/><w:lang w:val="en-US"/></w:rPr><w:t xml:space="preserve"> </w:t></w:r><w:r w:rsidR="438FBAC8" w:rsidRPr="438FBAC8"><w:rPr><w:noProof w:val="0"/><w:lang w:val="en-US"/></w:rPr><w:t>paragraph</w:t></w:r><w:r w:rsidR="438FBAC8" w:rsidRPr="438FBAC8"><w:rPr><w:noProof w:val="0"/><w:lang w:val="en-US"/></w:rPr><w:t xml:space="preserve">. </w:t></w:r><w:r w:rsidR="438FBAC8" w:rsidRPr="438FBAC8"><w:rPr><w:noProof w:val="0"/><w:lang w:val="en-US"/></w:rPr><w:t>This</w:t></w:r><w:r w:rsidR="438FBAC8" w:rsidRPr="438FBAC8"><w:rPr><w:noProof w:val="0"/><w:lang w:val="en-US"/></w:rPr><w:t xml:space="preserve"> </w:t></w:r><w:r w:rsidR="438FBAC8" w:rsidRPr="438FBAC8"><w:rPr><w:noProof w:val="0"/><w:lang w:val="en-US"/></w:rPr><w:t>paragraph</w:t></w:r><w:r w:rsidR="438FBAC8" w:rsidRPr="438FBAC8"><w:rPr><w:noProof w:val="0"/><w:lang w:val="en-US"/></w:rPr><w:t xml:space="preserve"> </w:t></w:r><w:r w:rsidR="438FBAC8" w:rsidRPr="438FBAC8"><w:rPr><w:noProof w:val="0"/><w:lang w:val="en-US"/></w:rPr><w:t>does</w:t></w:r><w:r w:rsidR="438FBAC8" w:rsidRPr="438FBAC8"><w:rPr><w:noProof w:val="0"/><w:lang w:val="en-US"/></w:rPr><w:t xml:space="preserve"> </w:t></w:r><w:r w:rsidR="438FBAC8" w:rsidRPr="438FBAC8"><w:rPr><w:noProof w:val="0"/><w:lang w:val="en-US"/></w:rPr><w:t>not</w:t></w:r><w:r w:rsidR="438FBAC8" w:rsidRPr="438FBAC8"><w:rPr><w:noProof w:val="0"/><w:lang w:val="en-US"/></w:rPr><w:t xml:space="preserve"> </w:t></w:r><w:r w:rsidR="438FBAC8" w:rsidRPr="438FBAC8"><w:rPr><w:noProof w:val="0"/><w:lang w:val="en-US"/></w:rPr><w:t>contain</w:t></w:r><w:r w:rsidR="438FBAC8" w:rsidRPr="438FBAC8"><w:rPr><w:noProof w:val="0"/><w:lang w:val="en-US"/></w:rPr><w:t xml:space="preserve"> </w:t></w:r><w:r w:rsidR="438FBAC8" w:rsidRPr="438FBAC8"><w:rPr><w:noProof w:val="0"/><w:lang w:val="en-US"/></w:rPr><w:t>any</w:t></w:r><w:r w:rsidR="438FBAC8" w:rsidRPr="438FBAC8"><w:rPr><w:noProof w:val="0"/><w:lang w:val="en-US"/></w:rPr><w:t xml:space="preserve"> </w:t></w:r><w:r w:rsidR="438FBAC8" w:rsidRPr="438FBAC8"><w:rPr><w:noProof w:val="0"/><w:lang w:val="en-US"/></w:rPr><w:t>tag</w:t></w:r><w:r w:rsidR="438FBAC8" w:rsidRPr="438FBAC8"><w:rPr><w:noProof w:val="0"/><w:lang w:val="en-US"/></w:rPr><w:t>.</w:t></w:r></w:p><w:p w14:paraId="46C71F49" w14:textId="5F44A885" w:rsidP="438FBAC8" w:rsidR="438FBAC8" w:rsidRDefault="438FBAC8"><w:pPr><w:pStyle w:val="Normal"/><w:rPr><w:noProof w:val="0"/><w:lang w:val="en-US"/></w:rPr></w:pPr><w:r w:rsidR="438FBAC8" w:rsidRPr="438FBAC8"><w:rPr><w:noProof w:val="0"/><w:lang w:val="en-US"/></w:rPr><w:t xml:space="preserve">This is the second paragraph. This paragraph contains a sentence with tag. </w:t></w:r><w:r w:rsidR="438FBAC8" w:rsidRPr="438FBAC8"><w:rPr><w:b w:val="1"/><w:bCs w:val="1"/><w:noProof w:val="0"/><w:lang w:val="en-US"/></w:rPr><w:t>This sentence is the tagged sentence.</w:t></w:r><w:r w:rsidR="438FBAC8" w:rsidRPr="438FBAC8"><w:rPr><w:noProof w:val="0"/><w:lang w:val="en-US"/></w:rPr><w:t xml:space="preserve"> This is the last sentence of the paragraph.</w:t></w:r></w:p><w:sectPr><w:pgSz w:h="16838" w:orient="portrait" w:w="11906"/><w:pgMar w:bottom="1440" w:footer="720" w:gutter="0" w:header="720" w:left="1440" w:right="1440" w:top="1440"/><w:cols w:space="720"/><w:docGrid w:linePitch="360"/></w:sectPr></w:body></w:document>
-    """
-    offline_word_doc_sample = r"""
-    <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-    <w:document xmlns:wpc="http://schemas.microsoft.com/office/word/2010/wordprocessingCanvas" xmlns:cx="http://schemas.microsoft.com/office/drawing/2014/chartex" xmlns:cx1="http://schemas.microsoft.com/office/drawing/2015/9/8/chartex" xmlns:cx2="http://schemas.microsoft.com/office/drawing/2015/10/21/chartex" xmlns:cx3="http://schemas.microsoft.com/office/drawing/2016/5/9/chartex" xmlns:cx4="http://schemas.microsoft.com/office/drawing/2016/5/10/chartex" xmlns:cx5="http://schemas.microsoft.com/office/drawing/2016/5/11/chartex" xmlns:cx6="http://schemas.microsoft.com/office/drawing/2016/5/12/chartex" xmlns:cx7="http://schemas.microsoft.com/office/drawing/2016/5/13/chartex" xmlns:cx8="http://schemas.microsoft.com/office/drawing/2016/5/14/chartex" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:aink="http://schemas.microsoft.com/office/drawing/2016/ink" xmlns:am3d="http://schemas.microsoft.com/office/drawing/2017/model3d" xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:m="http://schemas.openxmlformats.org/officeDocument/2006/math" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:wp14="http://schemas.microsoft.com/office/word/2010/wordprocessingDrawing" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing" xmlns:w10="urn:schemas-microsoft-com:office:word" xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:w14="http://schemas.microsoft.com/office/word/2010/wordml" xmlns:w15="http://schemas.microsoft.com/office/word/2012/wordml" xmlns:w16cex="http://schemas.microsoft.com/office/word/2018/wordml/cex" xmlns:w16cid="http://schemas.microsoft.com/office/word/2016/wordml/cid" xmlns:w16="http://schemas.microsoft.com/office/word/2018/wordml" xmlns:w16se="http://schemas.microsoft.com/office/word/2015/wordml/symex" xmlns:wpg="http://schemas.microsoft.com/office/word/2010/wordprocessingGroup" xmlns:wpi="http://schemas.microsoft.com/office/word/2010/wordprocessingInk" xmlns:wne="http://schemas.microsoft.com/office/word/2006/wordml" xmlns:wps="http://schemas.microsoft.com/office/word/2010/wordprocessingShape" mc:Ignorable="w14 w15 w16se w16cid w16 w16cex wp14"><w:body><w:p w14:paraId="46090773" w14:textId="311F80D1" w:rsidR="0087579B" w:rsidRDefault="00CC25BB"><w:r><w:t xml:space="preserve">This is the first paragraph. This is </w:t></w:r><w:r w:rsidRPr="00CC25BB"><w:rPr><w:u w:val="single"/></w:rPr><w:t>the second sentence</w:t></w:r><w:r><w:t xml:space="preserve"> of the first paragraph. This is the third sentence of the first paragraph with </w:t></w:r><w:r w:rsidRPr="00CC25BB"><w:rPr><w:b/><w:bCs/></w:rPr><w:t>boldened</w:t></w:r><w:r><w:t xml:space="preserve"> text.</w:t></w:r></w:p><w:p w14:paraId="209DB176" w14:textId="6D207BF3" w:rsidR="00CC25BB" w:rsidRDefault="00CC25BB"><w:r><w:rPr><w:rFonts w:hint="eastAsia"/></w:rPr><w:t>T</w:t></w:r><w:r><w:t xml:space="preserve">his is the second paragraph. This sentence is the beginning </w:t></w:r><w:r w:rsidRPr="00CC25BB"><w:rPr><w:i/><w:iCs/></w:rPr><w:t>of italicized chunk. This is the last sentence of the italicized</w:t></w:r><w:r><w:t xml:space="preserve"> chunk.</w:t></w:r></w:p><w:p w14:paraId="123FFFDB" w14:textId="28F428CD" w:rsidR="00CC25BB" w:rsidRDefault="00CC25BB"><w:r><w:t xml:space="preserve">This is the third paragraph with </w:t></w:r><w:hyperlink r:id="rId6" w:history="1"><w:r w:rsidRPr="00CC25BB"><w:rPr><w:rStyle w:val="a5"/></w:rPr><w:t>href link</w:t></w:r></w:hyperlink><w:r><w:t>.</w:t></w:r></w:p><w:p w14:paraId="39CE17FD" w14:textId="5989D0AF" w:rsidR="00CC25BB" w:rsidRDefault="00CC25BB"><w:r><w:t>Below contains image.</w:t></w:r></w:p><w:p w14:paraId="1717A511" w14:textId="19C0712D" w:rsidR="00CC25BB" w:rsidRDefault="00CC25BB"><w:r><w:rPr><w:noProof/></w:rPr><w:drawing><wp:inline distT="0" distB="0" distL="0" distR="0" wp14:anchorId="323B2122" wp14:editId="2543166F"><wp:extent cx="5731510" cy="3223895"/><wp:effectExtent l="0" t="0" r="2540" b="0"/><wp:docPr id="1" name="그림 1" descr="텍스트, 스크린샷, 실내, 화면이(가) 표시된 사진&#xA;&#xA;자동 생성된 설명"/><wp:cNvGraphicFramePr><a:graphicFrameLocks xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" noChangeAspect="1"/></wp:cNvGraphicFramePr><a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:nvPicPr><pic:cNvPr id="1" name="그림 1" descr="텍스트, 스크린샷, 실내, 화면이(가) 표시된 사진&#xA;&#xA;자동 생성된 설명"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="rId7" cstate="print"><a:extLst><a:ext uri="{28A0092B-C50C-407E-A947-70E740481C1C}"><a14:useLocalDpi xmlns:a14="http://schemas.microsoft.com/office/drawing/2010/main" val="0"/></a:ext></a:extLst></a:blip><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="5731510" cy="3223895"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r></w:p><w:p w14:paraId="06C27E74" w14:textId="6B3279C2" w:rsidR="00CC25BB" w:rsidRDefault="00CC25BB"><w:r><w:t>Below is a table.</w:t></w:r></w:p><w:tbl><w:tblPr><w:tblStyle w:val="a7"/><w:tblW w:w="0" w:type="auto"/><w:tblLook w:val="04A0" w:firstRow="1" w:lastRow="0" w:firstColumn="1" w:lastColumn="0" w:noHBand="0" w:noVBand="1"/></w:tblPr><w:tblGrid><w:gridCol w:w="3005"/><w:gridCol w:w="3005"/><w:gridCol w:w="3006"/></w:tblGrid><w:tr w:rsidR="00CC25BB" w14:paraId="703541B6" w14:textId="77777777" w:rsidTr="00CC25BB"><w:tc><w:tcPr><w:tcW w:w="3005" w:type="dxa"/></w:tcPr><w:p w14:paraId="235E6A15" w14:textId="5C6D69F1" w:rsidR="00CC25BB" w:rsidRDefault="00CC25BB"><w:pPr><w:rPr><w:rFonts w:hint="eastAsia"/></w:rPr></w:pPr><w:r><w:rPr><w:rFonts w:hint="eastAsia"/></w:rPr><w:t>F</w:t></w:r><w:r><w:t>irst cell</w:t></w:r></w:p></w:tc><w:tc><w:tcPr><w:tcW w:w="3005" w:type="dxa"/></w:tcPr><w:p w14:paraId="78187C4B" w14:textId="77777777" w:rsidR="00CC25BB" w:rsidRDefault="00CC25BB"><w:pPr><w:rPr><w:rFonts w:hint="eastAsia"/></w:rPr></w:pPr></w:p></w:tc><w:tc><w:tcPr><w:tcW w:w="3006" w:type="dxa"/></w:tcPr><w:p w14:paraId="5E655330" w14:textId="77777777" w:rsidR="00CC25BB" w:rsidRDefault="00CC25BB"><w:pPr><w:rPr><w:rFonts w:hint="eastAsia"/></w:rPr></w:pPr></w:p></w:tc></w:tr><w:tr w:rsidR="00CC25BB" w14:paraId="0CCA39AE" w14:textId="77777777" w:rsidTr="00CC25BB"><w:tc><w:tcPr><w:tcW w:w="3005" w:type="dxa"/></w:tcPr><w:p w14:paraId="4626C4D3" w14:textId="77777777" w:rsidR="00CC25BB" w:rsidRDefault="00CC25BB"><w:pPr><w:rPr><w:rFonts w:hint="eastAsia"/></w:rPr></w:pPr></w:p></w:tc><w:tc><w:tcPr><w:tcW w:w="3005" w:type="dxa"/></w:tcPr><w:p w14:paraId="5859A718" w14:textId="240B0851" w:rsidR="00CC25BB" w:rsidRDefault="00CC25BB"><w:pPr><w:rPr><w:rFonts w:hint="eastAsia"/></w:rPr></w:pPr><w:r><w:rPr><w:rFonts w:hint="eastAsia"/></w:rPr><w:t>S</w:t></w:r><w:r><w:t>econd cell.</w:t></w:r></w:p></w:tc><w:tc><w:tcPr><w:tcW w:w="3006" w:type="dxa"/></w:tcPr><w:p w14:paraId="026C38C3" w14:textId="77777777" w:rsidR="00CC25BB" w:rsidRDefault="00CC25BB"><w:pPr><w:rPr><w:rFonts w:hint="eastAsia"/></w:rPr></w:pPr></w:p></w:tc></w:tr></w:tbl><w:p w14:paraId="0A75EC55" w14:textId="564AD035" w:rsidR="00CC25BB" w:rsidRDefault="00CC25BB"/><w:p w14:paraId="0F2277B8" w14:textId="77777777" w:rsidR="00CC25BB" w:rsidRDefault="00CC25BB"><w:pPr><w:rPr><w:rFonts w:hint="eastAsia"/></w:rPr></w:pPr></w:p><w:sectPr w:rsidR="00CC25BB"><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1701" w:right="1440" w:bottom="1440" w:left="1440" w:header="851" w:footer="992" w:gutter="0"/><w:cols w:space="425"/><w:docGrid w:linePitch="360"/></w:sectPr></w:body></w:document>
-    """
-    xml_sample = of365_sample
+class ParaHandler:
+    def __init__(self, para: Tag):
+        self.para = para
 
-    soup = BeautifulSoup(xml_sample, 'lxml-xml')
-    paras = soup.find_all('w:p')
-    p = paras[n]
-    return p
+    @property
+    def passes_inspection(self):
+        return all([
+            # list of conditions for parsing
+            self.has_text_tag,
+            self.is_not_drawing,
+            self.is_not_empty,
+        ])
 
-p = reset()
+    @property
+    def has_text_tag(self):
+        return self.para.find_all('t')
+
+    @property
+    def is_not_drawing(self):
+        return not bool(self.para.find_all('w:drawing'))
+
+    @property
+    def is_not_empty(self):
+        pattern = re.compile(r'^\s+$')
+        return not bool(re.match(pattern, self.para.text))
+
+
+class DocxSegmentCreator:
+    def __init__(self, projectfile, parser):
+        self.pf = projectfile
+        self.parser = parser
+        self.soup = self._get_soup()
+        self.seg_num = 1
+
+    def _get_soup(self):
+        pf = self.pf
+        with ZipFile(pf.file.path) as zip:
+            file_list = zip.namelist()
+            docu_xml = get_docu_xml(file_list)
+            with zip.open(docu_xml) as docu_xml:
+                xml = docu_xml.read()
+                soup = BeautifulSoup(xml, "lxml-xml")
+        return soup
+
+    def _replace_para_with_hex(self, para: Tag):
+        hex = uuid.uuid4().hex
+        para.replace_with(hex)
+        return hex
+
+    def _split_sentences(self, para_text):
+        regex = re.compile(self.parser.full_regex, flags=re.UNICODE)
+        sentences = regex.split(para_text)
+
+        return sentences
+
+    def _create_segments(self, sentences, para_num):
+        for sentence in sentences:
+            if sentence.strip() != '':
+                Segment.objects.create(
+                    file=self.pf,
+                    source=sentence,
+                    seg_id=self.seg_num,
+                    para_num=para_num
+                )
+                self.seg_num += 1
+
+    def _get_p_wrapper(self, para):
+
+        def _has_text(child):
+            return bool(child.find('t'))
+
+        para_copy = clone(para)
+
+        tag_with_t = [
+            child for child in para_copy.children if _has_text(child)
+            ]
+
+        for tag in tag_with_t:
+            tag.decompose()
+
+        return para_copy
+
+    def _create_paragraph(self, para, para_num, hex):
+        para_obj = Paragraph.objects.create(
+            projectfile=self.pf,
+            para_num=para_num,
+            hex_placeholder=hex,
+            wrapper=self._get_p_wrapper(para)
+        )
+        return para_obj
+
+    @property
+    def paras_with_t(self):
+
+        all_paras = self.soup.find_all('w:p')
+
+        result = list()
+
+        for para in all_paras:
+
+            clone_para = clone(para)
+            paragraph = ParaHandler(clone_para)
+
+            if paragraph.passes_inspection:
+
+                # replace the para in original soup with hex
+                hex = self._replace_para_with_hex(para)
+
+                # make para clone and attach to result
+                para_tuple = ParaTuple(clone_para, hex)
+                result.append(para_tuple)
+
+        self.pf.processed_soup = str(self.soup)
+        
+        self.pf.save()
+
+        return result
+
+    def create_segments(self):
+
+        self.pf.original_soup = str(self.soup)
+        paras = self.paras_with_t
+
+        for para_num, para in enumerate(paras, start=1):
+
+            para_text = para.clone.get_text()
+
+            sentences = self._split_sentences(para_text)
+            self._create_segments(sentences, para_num)
+
+            self._create_paragraph(para.clone, para_num, para.hex)

@@ -102,10 +102,10 @@ class GetDiffHtmlView(LoginRequiredMixin, View):
         file_id = self.kwargs.get("file_id")
         return ProjectFile.objects.get(pk=file_id)
 
-    def get(self, request, source_text, *args, **kwargs):
+    def get(self, request, seg_id, *args, **kwargs):
         fi = self.get_object()
         fi_segments = fi.segments.all()
-        current_seg = fi.segments.filter(source=source_text).first()
+        current_seg = fi.segments.get(seg_id=seg_id)
 
         if fi_segments.count() == 0:
             return HttpResponse("No segment found in the database.")
@@ -117,11 +117,11 @@ class GetDiffHtmlView(LoginRequiredMixin, View):
                 return HttpResponse(short_distance_seg.html_snippet)
 
         try:
-            closest_match = shortest_dist(fi_segments, source_text)
+            closest_match = shortest_dist(fi_segments, current_seg.source)
         except ValueError as err:
             return HttpResponse(err)
 
-        html_snippet = make_html(closest_match.db_seg_text, source_text)
+        html_snippet = make_html(closest_match.db_seg_text, current_seg.source)
         final_html = add_target_html(html_snippet,
                                      closest_match.db_target_text)
         return HttpResponse(final_html)

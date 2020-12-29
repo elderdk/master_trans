@@ -1,11 +1,12 @@
 import uuid
 import pickle
+from urllib.parse import quote
 
 from django.db import models
 from users.models import User
 from django.urls import reverse
 from datetime import date
-
+from django.utils.http import urlencode
 
 DEFAULT_REGEX = r"(?<=[\"'.>])(?<![s])\s+"
 REGEX_EXCLUSION = r'(?<!Mr.)(?<!Mrs.)(?<!endtag>)(?<![^.,]")'
@@ -75,6 +76,8 @@ class ProjectFile(models.Model):
     file = models.FileField(upload_to=get_file_path,
                             blank=True,
                             null=True)
+    processed_soup = models.TextField(blank=True, null=True)
+    original_soup = models.TextField(blank=True, null=True)
 
     def __str__(self):
         return self.name
@@ -153,7 +156,7 @@ class Paragraph(models.Model):
         related_name='paragraphs'
         )
     para_num = models.IntegerField()
-    hex_placeholder = models.CharField(max_length=32, blank=True, null=True)
+    hex_placeholder = models.CharField(max_length=32)
 
     _wrapper = models.BinaryField(null=True, blank=True)
 

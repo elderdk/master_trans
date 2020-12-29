@@ -83,7 +83,9 @@ def clone(el):
     if isinstance(el, NavigableString):
         return type(el)(el)
 
-    copy = Tag(None, el.builder, el.name, el.namespace, el.nsprefix)
+    copy = Tag(
+        None, el.builder, el.name, el.namespace, el.nsprefix
+        )
     # work around bug where there is no builder set
     # https://bugs.launchpad.net/beautifulsoup/+bug/1307471
     copy.attrs = dict(el.attrs)

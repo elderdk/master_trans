@@ -62,7 +62,7 @@
               <textarea 
                 id="target-{{ forloop.counter }}" 
                 commit-url={% url 'segment-commit' segment.file.id segment.id commit_token %} 
-                onfocus="retrieve_match('{% url 'search_match' segment.file.id segment.source %}', '{{ segment.source|urlencode }}')">{% if segment.target %}{{ segment.target }}{% else %}{% endif %}</textarea>
+                onfocus="retrieve_match('{% url 'search_match' segment.file.id segment.seg_id %}', '{{ segment.source|urlencode }}')">{% if segment.target %}{{ segment.target }}{% else %}{% endif %}</textarea>
              </div>
 			    </div>
 			   </div>
