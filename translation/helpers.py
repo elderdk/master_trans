@@ -69,7 +69,7 @@ def is_all_supported(fi_list):
 
 
 def get_ext(fi):
-    return fi.file.path.split('.')[-1]
+    return fi.file.name.split('.')[-1]
 
 
 def get_docu_xml(file_list):
