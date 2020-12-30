@@ -236,5 +236,5 @@ class DocxGenerator(TargetGenerator):
             byte_file = BytesIO(file_obj.get()['Body'].read())
 
             return FileResponse(
-                open(byte_file, "rb"), as_attachment=True
+                byte_file, as_attachment=True
                 )
