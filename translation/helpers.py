@@ -6,6 +6,8 @@ import Levenshtein
 from django.conf import settings
 from bs4 import Tag, NavigableString
 
+from django.conf import settings
+
 
 SEGMENT_MATCH_THRESH = 0.7
 FILE_NOT_SUPPORTED_MSG = (
@@ -94,3 +96,14 @@ def clone(el):
     for child in el.contents:
         copy.append(clone(child))
     return copy
+
+
+def filepath(projectfile):
+    if settings.DEBUG:
+        return projectfile.file.path
+    else:
+        return projectfile.file.file.file
+
+
+def filename(projectfile):
+    return projectfile.file.name

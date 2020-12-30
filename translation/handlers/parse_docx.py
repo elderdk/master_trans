@@ -4,7 +4,7 @@ from zipfile import ZipFile
 from collections import namedtuple
 
 from bs4 import BeautifulSoup, Tag
-from ..helpers import get_docu_xml, clone
+from ..helpers import get_docu_xml, clone, filepath
 from ..models import Paragraph, Segment
 
 
@@ -47,7 +47,7 @@ class DocxSegmentCreator:
 
     def _get_soup(self):
         pf = self.pf
-        with ZipFile(pf.file.path) as zip:
+        with ZipFile(filepath(pf)) as zip:
             file_list = zip.namelist()
             docu_xml = get_docu_xml(file_list)
             with zip.open(docu_xml) as docu_xml:

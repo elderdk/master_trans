@@ -8,7 +8,7 @@ from django.db.models import Q
 
 from translation.models import Paragraph, Segment
 
-from .helpers import get_docu_xml
+from .helpers import get_docu_xml, filepath, filename
 
 
 class TargetGenerator:
@@ -17,7 +17,7 @@ class TargetGenerator:
         self.ext = projectfile.name.split('.')[-1]
 
     def get_file_strings(self, projectfile):
-        with Path(projectfile.file.path).open() as fi:
+        with filepath(projectfile).open() as fi:
             file_strings = fi.read()
         return file_strings
 
@@ -54,7 +54,7 @@ class TargetGenerator:
         return new_file_name + "_translated." + ext
 
     def make_target_folder(self, projectfile):
-        parent_folder = Path(projectfile.file.path).parents[1]
+        parent_folder = Path(filename(projectfile)).parents[1]
         target_folder = parent_folder.joinpath("target")
 
         target_folder.mkdir(parents=True, exist_ok=True)
@@ -224,7 +224,7 @@ class DocxGenerator(TargetGenerator):
 
     def copy_source_to_target(self):
         pf = self.pf
-        source_path = pf.file.path
+        source_path = filepath(pf)
 
         new_file_name = self.get_new_file_name(pf)
         target_folder = self.make_target_folder(pf)
