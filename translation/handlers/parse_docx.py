@@ -2,6 +2,9 @@ import re
 import uuid
 from zipfile import ZipFile
 from collections import namedtuple
+form io import BytesIO
+
+from django.conf import settings
 
 from bs4 import BeautifulSoup, Tag
 from ..helpers import get_docu_xml, clone, filepath
@@ -47,12 +50,20 @@ class DocxSegmentCreator:
 
     def _get_soup(self):
         pf = self.pf
-        with ZipFile(filepath(pf)) as zip:
+
+        if settings.DEBUG:
+            zipfile = pf.file.path
+        else:
+            zipfile = BytesIO(pf.file.file.obj.get()['Body'].read())
+
+        with ZipFile(zipfile) as zip:
             file_list = zip.namelist()
             docu_xml = get_docu_xml(file_list)
+
             with zip.open(docu_xml) as docu_xml:
                 xml = docu_xml.read()
                 soup = BeautifulSoup(xml, "lxml-xml")
+
         return soup
 
     def _replace_para_with_hex(self, para: Tag):

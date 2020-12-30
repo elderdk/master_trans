@@ -101,101 +101,11 @@ class DocxGenerator(TargetGenerator):
         self.pf = pf
         self.target_xml = pf.processed_soup
 
-    #     self.p_wrap = "<w:p></w:p>"
-    #     self.r_wrap = "<w:r></w:r>"
-    #     self.empty_rpr_wrap = "</rPr>"
-    #     self.t_wrap = "<w:t></w:t>"
-
-    # def _get_all_paras(self):
-    #     pf = self.projectfile
-    #     all_paras = Paragraph.objects.filter(
-    #                                         projectfile=pf
-    #                                         ).order_by('para_num')
-    #     return all_paras
-
     def _get_all_para_segs(self, para):
         all_para_segs = Segment.objects.filter(
             Q(file=self.pf) & Q(para_num=para.para_num)
         ).order_by('seg_id')
         return all_para_segs
-
-
-    # def _insert_xml(self, outer, inner):
-    #     inner = str(inner)
-    #     if inner[-1] == ' ':
-    #         inner = inner[:-1]
-    #     index = outer.rfind("</")
-    #     return outer[:index] + inner + outer[index:]
-
-    # def _insert_rpr(self, xml, rpr):
-    #     index = xml.find("<w:p>") + 6
-    #     return xml[:index] + rpr + xml[index:]
-
-    # def _get_end_pos(self, string):
-    #     pattern = re.compile('<endtag>')
-    #     end_pos = re.search(pattern, string).end()
-    #     return end_pos
-
-    # def _get_tag_id(self, string):
-    #     pattern = re.compile('<tag id=\"(\d+)\">')
-    #     result = re.search(pattern, string)
-    #     id_num = result.group(1)
-    #     return id_num
-
-    # def _parse_string(self, string):
-    #     open_tag_re = re.compile('<tag id=\"\d+\">')
-    #     openning_tag = re.search(open_tag_re, string).end()
-
-    #     end_tag_re = re.compile('<endtag>')
-    #     ending_tag = re.search(end_tag_re, string).start()
-
-    #     parsed_string = string[openning_tag:ending_tag]
-    #     return parsed_string
-
-    # def _get_tag(self, tag_id):
-    #     pf = self.projectfile
-    #     tag = Tag.objects.filter(
-    #         Q(paragraph__projectfile=pf) & Q(in_file_id=tag_id)
-    #     ).first()
-    #     return tag
-
-    # def _wrap_in_xml(self, translation, tag_pos, no_tag=False):
-
-    #     if no_tag is True:
-    #         str_to_wrap = translation
-    #     else:
-    #         str_to_wrap = translation[:tag_pos]
-
-    #     wrap_sequence = (
-    #         self.t_wrap,
-    #         self.r_wrap
-    #     )
-
-    #     if str_to_wrap != '':
-    #         # this is currently creating a run for each sentence if
-    #         # there's no tag in the paragraph. should be fixed.
-    #         xml_string = str_to_wrap
-
-    #         for seq in wrap_sequence:
-    #             xml_string = self._insert_xml(seq, xml_string)
-    #         translation = translation.replace(str_to_wrap, '')
-    #         rpr_wrap = self.empty_rpr_wrap
-
-    #     else:
-    #         end_pos = self._get_end_pos(translation)
-    #         tagged_string = translation[:end_pos]
-    #         tag_id = self._get_tag_id(tagged_string)
-    #         xml_string = self._parse_string(tagged_string)
-
-    #         for seq in wrap_sequence:
-    #             xml_string = self._insert_xml(seq, xml_string)
-    #         translation = translation.replace(tagged_string, '')
-
-    #         rpr_wrap = self._get_tag(tag_id)
-
-    #     result = self._insert_rpr(xml_string, rpr_wrap)
-
-    #     return result, translation
 
     def _add_namespace(self, namespace, tag):
         tag.name = namespace + ':' + tag.name
