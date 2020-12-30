@@ -230,12 +230,8 @@ class DocxGenerator(TargetGenerator):
                     open(new_file, "rb"), as_attachment=True
                     )
         else:
-            s3_client = boto3.client('s3')
-            
-            response = s3_client.generate_presigned_url(
-                'get_object',
-                Params={'Bucket': 'mastertrans-assets', 'Key': new_file},
-                ExpiresIn=3600
-                )
+            s3 = boto3.client('s3')
 
-            return response
+            with open(new_file, 'wb') as data:
+                s3.download_fileobj('mastertrans-assets', new_file, data)
+                return FileResponse(data, as_attachment=True)
