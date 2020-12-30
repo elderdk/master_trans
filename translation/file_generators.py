@@ -202,7 +202,7 @@ class DocxGenerator(TargetGenerator):
             _insert_xml(oldzip, newzip)
 
             org_file_obj.copy_from(CopySource=bucket+'/'+new_file_obj.key)
-
+            new_file_obj.delete()
             return Path(org_file_obj.key)
 
     def generate(self):
@@ -231,7 +231,10 @@ class DocxGenerator(TargetGenerator):
                     )
         else:
             s3 = boto3.client('s3')
+            bucket = 'mastertrans-assets'
+            file_obj = s3.Object(bucket, new_file)
+            byte_file = BytesIO(file_obj.get()['Body'].read())
 
-            data = open(new_file, 'wb')
-            s3.download_fileobj('mastertrans-assets', new_file, data)
-            return FileResponse(data, as_attachment=True)
+            return FileResponse(
+                open(byte_file, "rb"), as_attachment=True
+                )
