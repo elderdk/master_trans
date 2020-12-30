@@ -192,6 +192,7 @@ class DocxGenerator(TargetGenerator):
             new_file_obj = s3.Object(bucket, new_file).copy_from(
                 CopySource=bucket+'/'+org_file_obj.key
             )
+            new_file_obj = s3.Object(bucket, new_file)
             new_file = BytesIO(new_file_obj.get()['Body'].read())
 
             oldzip = ZipFile(original_file, mode='r')
