@@ -230,7 +230,7 @@ class DocxGenerator(TargetGenerator):
                     open(new_file, "rb"), as_attachment=True
                     )
         else:
-            s3 = boto3.client('s3')
+            s3 = boto3.resource('s3')
             bucket = 'mastertrans-assets'
             file_obj = s3.Object(bucket, new_file)
             byte_file = BytesIO(file_obj.get()['Body'].read())
