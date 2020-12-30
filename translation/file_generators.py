@@ -8,6 +8,7 @@ import boto3
 from bs4 import Tag as SoupTag
 from django.db.models import Q
 from django.conf import settings
+from django.http import FileResponse, HttpResponse
 
 from translation.models import Paragraph, Segment
 
@@ -223,4 +224,18 @@ class DocxGenerator(TargetGenerator):
         new_file = self.insert_xml_to_docx(
                                         new_file, self.target_xml
                                         )
-        return new_file
+
+        if settings.DEBUG:
+            return FileResponse(
+                    open(new_file.as_posix(), "rb"), as_attachment=True
+                    )
+        else:
+            s3_client = boto3.client('s3')
+            
+            response = s3_client.generate_presigned_url(
+                'get_object',
+                Params={'Bucket': 'mastertrans-assets', 'Key': new_file},
+                ExpiresIn=3600
+                )
+
+            return response

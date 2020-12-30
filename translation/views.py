@@ -1,9 +1,12 @@
+from io import BytesIO
+
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from django.http import HttpResponse, FileResponse
+from django.http import HttpResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse_lazy
 from django.views.generic import DeleteView, ListView, View
+from django.conf import settings
 
 from .forms import (
     FileCreateForm,
@@ -302,8 +305,6 @@ class GenerateTargetView(LoginRequiredMixin, UserPassesTestMixin, View):
         projectfile = self.get_object()
 
         download_file = TargetGenerator(projectfile)
-        prepared_file = download_file.generate_target()
+        result = download_file.generate_target()
 
-        return FileResponse(
-            open(prepared_file.as_posix(), "rb"), as_attachment=True
-            )
+        return result
