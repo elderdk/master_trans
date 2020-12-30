@@ -2,7 +2,9 @@ from pathlib import Path
 from shutil import copyfile
 from zipfile import ZipFile
 import os
+from io import BytesIO
 
+import boto3
 from bs4 import Tag as SoupTag
 from django.db.models import Q
 from django.conf import settings
@@ -147,27 +149,57 @@ class DocxGenerator(TargetGenerator):
         target_folder = self.make_target_folder(pf)
         new_file = target_folder.joinpath(new_file_name).as_posix()
 
-        copyfile(source_path, new_file)
+        if settings.DEBUG:
+            copyfile(source_path, new_file)
 
-        return new_file
+        else:
+            s3 = boto3.resource('s3')
+            bucket = 'mastertrans-assets'
+            copy_source = {
+                'Bucket': bucket,
+                'Key': source_path
+            }
+            s3.meta.client.copy(copy_source, bucket, new_file)
 
     def insert_xml_to_docx(self, original_file, source_xml):
+
+        def _insert_xml(oldzip, newzip):
+            docu_xml = get_docu_xml(oldzip.namelist())
+            for file in oldzip.infolist():
+                buffer = oldzip.read(file.filename)
+                if file.filename != docu_xml:
+                    newzip.writestr(file.filename, buffer)
+            newzip.writestr(docu_xml, source_xml)
+            oldzip.close()
+            newzip.close()
+
         new_file = original_file + '.tmp'
-        oldzip = ZipFile(original_file, mode='r')
-        newzip = ZipFile(new_file, mode='w')
 
-        docu_xml = get_docu_xml(oldzip.namelist())
-        for file in oldzip.infolist():
-            buffer = oldzip.read(file.filename)
-            if file.filename != docu_xml:
-                newzip.writestr(file.filename, buffer)
-        newzip.writestr(docu_xml, source_xml)
-        oldzip.close()
-        newzip.close()
-        os.remove(original_file)
-        os.rename(new_file, original_file)
+        if settings.DEBUG:
+            oldzip = ZipFile(original_file, mode='r')
+            newzip = ZipFile(new_file, mode='w')
+            _insert_xml(oldzip, newzip)
+            os.remove(original_file)
+            os.rename(new_file, original_file)
+            return Path(original_file)
 
-        return Path(original_file)
+        else:
+            s3 = boto3.resource('s3')
+            bucket = 'mastertrans-assets'
+            org_file_obj = s3.Object(bucket, original_file)
+            original_file = BytesIO(org_file_obj.get()['Body'].read())
+
+            new_file_obj = s3.Object(bucket, new_file)
+            new_file = BytesIO(new_file_obj.get()['Body'].read())
+
+            oldzip = ZipFile(original_file, mode='r')
+            newzip = ZipFile(new_file, mode='w')
+
+            _insert_xml(oldzip, newzip)
+
+            org_file_obj.copy_from(CopySource=bucket+'/'+new_file_obj.key)
+            new_file_obj.delete()
+            return Path(org_file_obj.key)
 
     def generate(self):
 
