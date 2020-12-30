@@ -190,7 +190,7 @@ class DocxGenerator(TargetGenerator):
             original_file = BytesIO(org_file_obj.get()['Body'].read())
 
             new_file_obj = s3.Object(bucket, new_file).copy_from(
-                CopySource=bucket+'/'+original_file.key
+                CopySource=bucket+'/'+org_file_obj.key
             )
             new_file = BytesIO(new_file_obj.get()['Body'].read())
 
