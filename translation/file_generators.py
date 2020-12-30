@@ -232,6 +232,6 @@ class DocxGenerator(TargetGenerator):
         else:
             s3 = boto3.client('s3')
 
-            with open(new_file, 'wb') as data:
-                s3.download_fileobj('mastertrans-assets', new_file, data)
-                return FileResponse(data, as_attachment=True)
+            data = open(new_file, 'wb')
+            s3.download_fileobj('mastertrans-assets', new_file, data)
+            return FileResponse(data, as_attachment=True)
