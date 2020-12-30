@@ -5,6 +5,7 @@ import os
 
 from bs4 import Tag as SoupTag
 from django.db.models import Q
+from django.conf import settings
 
 from translation.models import Paragraph, Segment
 
@@ -134,7 +135,13 @@ class DocxGenerator(TargetGenerator):
 
     def copy_source_to_target(self):
         pf = self.pf
-        source_path = filepath(pf)
+
+        if settings.DEBUG:
+            source_path = pf.file.path
+        else:
+            source_path = str(pf.file.file)
+
+        # source_path = filepath(pf)
 
         new_file_name = self.get_new_file_name(pf)
         target_folder = self.make_target_folder(pf)

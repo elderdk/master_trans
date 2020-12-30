@@ -98,11 +98,8 @@ def clone(el):
     return copy
 
 
-def filepath(projectfile):
-    if settings.DEBUG:
-        return projectfile.file.path
-    else:
-        return str(projectfile.file.file)
+# def filepath(projectfile):
+
 
 
 def filename(projectfile):
