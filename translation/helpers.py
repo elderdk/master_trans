@@ -102,7 +102,7 @@ def filepath(projectfile):
     if settings.DEBUG:
         return projectfile.file.path
     else:
-        return projectfile.file.file.file
+        return projectfile.file.file
 
 
 def filename(projectfile):
