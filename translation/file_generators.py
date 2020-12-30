@@ -143,8 +143,6 @@ class DocxGenerator(TargetGenerator):
         else:
             source_path = str(pf.file)
 
-        # source_path = filepath(pf)
-
         new_file_name = self.get_new_file_name(pf)
         target_folder = self.make_target_folder(pf)
         new_file = target_folder.joinpath(new_file_name).as_posix()
@@ -160,6 +158,8 @@ class DocxGenerator(TargetGenerator):
                 'Key': source_path
             }
             s3.meta.client.copy(copy_source, bucket, new_file)
+        
+        return new_file
 
     def insert_xml_to_docx(self, original_file, source_xml):
 
