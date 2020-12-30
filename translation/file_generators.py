@@ -202,7 +202,7 @@ class DocxGenerator(TargetGenerator):
             _insert_xml(oldzip, newzip)
 
             org_file_obj.copy_from(CopySource=bucket+'/'+new_file_obj.key)
-            new_file_obj.delete()
+
             return Path(org_file_obj.key)
 
     def generate(self):
