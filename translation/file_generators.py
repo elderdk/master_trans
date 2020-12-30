@@ -234,7 +234,8 @@ class DocxGenerator(TargetGenerator):
             bucket = 'mastertrans-assets'
             file_obj = s3.Object(bucket, new_file)
             byte_file = BytesIO(file_obj.get()['Body'].read())
+            filename = Path(new_file).name
 
             return FileResponse(
-                byte_file, as_attachment=True
+                byte_file, as_attachment=True, filename=filename
                 )
