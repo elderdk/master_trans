@@ -2,12 +2,12 @@ import re
 import uuid
 from zipfile import ZipFile
 from collections import namedtuple
-form io import BytesIO
+from io import BytesIO
 
 from django.conf import settings
 
 from bs4 import BeautifulSoup, Tag
-from ..helpers import get_docu_xml, clone, filepath
+from ..helpers import get_docu_xml, clone
 from ..models import Paragraph, Segment
 
 
