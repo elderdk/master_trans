@@ -223,11 +223,11 @@ class DocxGenerator(TargetGenerator):
 
         new_file = self.insert_xml_to_docx(
                                         new_file, self.target_xml
-                                        )
+                                        ).as_posix()
 
         if settings.DEBUG:
             return FileResponse(
-                    open(new_file.as_posix(), "rb"), as_attachment=True
+                    open(new_file, "rb"), as_attachment=True
                     )
         else:
             s3_client = boto3.client('s3')
