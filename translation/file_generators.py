@@ -139,7 +139,7 @@ class DocxGenerator(TargetGenerator):
         if settings.DEBUG:
             source_path = pf.file.path
         else:
-            source_path = str(pf.file.file)
+            source_path = str(pf.file)
 
         # source_path = filepath(pf)
 
