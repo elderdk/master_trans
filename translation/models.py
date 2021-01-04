@@ -1,13 +1,12 @@
 import uuid
 import pickle
-from urllib.parse import quote
 import sys
 
 from django.db import models
 from users.models import User
 from django.urls import reverse
 from datetime import date
-from django.utils.http import urlencode
+
 
 DEFAULT_REGEX = r"(?<=[\"'.>])(?<![s])\s+"
 REGEX_EXCLUSION = r'(?<!Mr.)(?<!Mrs.)(?<!endtag>)(?<![^.,]")'
