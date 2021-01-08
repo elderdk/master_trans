@@ -1,12 +1,9 @@
-from io import BytesIO
-
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.http import HttpResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse_lazy
 from django.views.generic import DeleteView, ListView, View
-from django.conf import settings
 
 from .forms import (
     FileCreateForm,
@@ -24,6 +21,11 @@ from .helpers import (
     all_forms_valid,
     is_all_supported,
     FILE_NOT_SUPPORTED_MSG,
+)
+
+from .support.views_helpers import (
+    set_status,
+    DiffView
 )
 
 from .seg_creators import create_file_and_segments
@@ -110,46 +112,27 @@ class GetDiffHtmlView(LoginRequiredMixin, View):
         fi_segments = fi.segments.all()
         current_seg = fi.segments.get(seg_id=seg_id)
 
-        if fi_segments.count() == 0:
+        this = DiffView(fi_segments, current_seg)
+
+        if this.no_segment_found_in_database:
             return HttpResponse("No segment found in the database.")
-        if hasattr(current_seg, 'short_distance_seg'):
-            short_distance_seg = current_seg.short_distance_seg.first()
-            if short_distance_seg is None:
+
+        if this.has_short_distance_seg_attr:
+
+            if this.has_no_short_distance_seg:
                 return HttpResponse("No segment found.")
             else:
-                return HttpResponse(short_distance_seg.html_snippet)
+                return HttpResponse(this.html_snippet)
 
-        try:
-            closest_match = shortest_dist(fi_segments, current_seg.source)
-        except ValueError as err:
-            return HttpResponse(err)
+        elif this.has_no_short_distance_seg_attr:
 
-        html_snippet = make_html(closest_match.db_seg_text, current_seg.source)
-        final_html = add_target_html(html_snippet,
-                                     closest_match.db_target_text)
-        return HttpResponse(final_html)
+            return HttpResponse(this.closest_match_html)
 
 
 class SegmentCommitView(LoginRequiredMixin, View):
     http_method_names = ["post"]
 
     def post(self, request, file_id, seg_id, commit_token):
-
-        def set_status(projectfile, commit_token):
-
-            project = projectfile.project
-            token_dict = {
-                project.translation_id.__str__(): Segment.TRANSLATED,
-                project.review_id.__str__(): Segment.REVIEWED,
-                project.sign_off_id.__str__(): Segment.SIGNED_OFF
-            }
-
-            status_list = Segment.SEGMENT_STATUSES
-            abbreviate = token_dict.get(commit_token)
-
-            for idx, tup in enumerate(status_list):
-                if tup[0] == abbreviate:
-                    return abbreviate, status_list[idx][1]
 
         projectfile = ProjectFile.objects.get(id=file_id)
         segment = projectfile.segments.get(id=seg_id)
@@ -244,7 +227,7 @@ class ProjectUpdateView(LoginRequiredMixin, UserPassesTestMixin, View):
 
     def get(self, request, *args, **kwargs):
         project = self.get_object()
-        sentence_parser = SentenceParser.objects.get(project=project)
+        sentence_parser = SentenceParser.objects.filter(project=project).last()
         form_classes = {
             "project": ProjectUpdateForm(instance=project),
             "files": FileCreateForm,
@@ -281,8 +264,8 @@ class ProjectUpdateView(LoginRequiredMixin, UserPassesTestMixin, View):
             return redirect("project-create")
 
         parser = sentence_parser.save(commit=False)
+        parser.project = project
         create_file_and_segments(parser, fi_list, project)
-
         sentence_parser.save()
 
         return redirect(self.success_url)
