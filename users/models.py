@@ -18,6 +18,6 @@ class Role(models.Model):
 
 
 class User(AbstractUser):
-    expertise = models.ManyToManyField(Expertise, related_name='users')
-    role = models.ManyToManyField(Role)
-    is_client = models.BooleanField(default=False, verbose_name='is_client')
+    expertise = models.ManyToManyField(Expertise, related_name='users', blank=True)
+    role = models.ManyToManyField(Role, blank=True)
+    is_client = models.BooleanField(default=False, verbose_name='is_client', blank=True)
