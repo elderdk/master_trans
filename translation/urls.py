@@ -1,23 +1,11 @@
 from django.urls import path
 from .views import views
 from .views.project import views as pjviews
+from .views.segment import views as sgviews
 
 
 urlpatterns = [
     path('', views.display_landing, name='landing'),
-
-    path('project/translate/<int:pk>', views.SegmentTranslateView.as_view(),
-         name='segment-translate'),
-
-    path('project/review/<int:pk>', views.SegmentReviewView.as_view(),
-         name='segment-review'),
-
-    path('project/sign-off/<int:pk>', views.SegmentSOView.as_view(),
-         name='segment-so'),
-
-    path('commit/<int:file_id>/<int:seg_id>/<str:commit_token>',
-         views.SegmentCommitView.as_view(),
-         name='segment-commit'),
 
     path('search_match/<int:file_id>/<str:seg_id>',
          views.GetDiffHtmlView.as_view(),
@@ -42,4 +30,20 @@ urlpatterns += [
 
     path('project/delete_all/', pjviews.ProjectDeleteAllView.as_view(),
          name='project-delete-all'),
+]
+
+# Segment views
+urlpatterns += [
+     path('project/translate/<int:pk>', sgviews.SegmentTranslateView.as_view(),
+          name='segment-translate'),
+
+     path('project/review/<int:pk>', sgviews.SegmentReviewView.as_view(),
+          name='segment-review'),
+
+     path('project/sign-off/<int:pk>', sgviews.SegmentSOView.as_view(),
+          name='segment-so'),
+
+     path('commit/<int:file_id>/<int:seg_id>/<str:commit_token>',
+          sgviews.SegmentCommitView.as_view(),
+          name='segment-commit'),
 ]
