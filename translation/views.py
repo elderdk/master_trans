@@ -15,9 +15,6 @@ from .models import Project, ProjectFile, Segment, SentenceParser
 from .file_generators import TargetGenerator
 
 from .helpers import (
-    shortest_dist,
-    make_html,
-    add_target_html,
     all_forms_valid,
     is_all_supported,
     FILE_NOT_SUPPORTED_MSG,
@@ -122,7 +119,11 @@ class GetDiffHtmlView(LoginRequiredMixin, View):
             if this.has_no_short_distance_seg:
                 return HttpResponse("No segment found.")
             else:
-                return HttpResponse(this.html_snippet)
+                return HttpResponse(
+                    this.source_html_snippet +
+                    '$$$' +
+                    this.target_html_snippet
+                    )
 
         elif this.has_no_short_distance_seg_attr:
 

@@ -147,7 +147,8 @@ class ShortDistanceSegment(models.Model):
                                 related_name='short_distance_seg'
                                 )
     distance = models.FloatField()
-    html_snippet = models.TextField()
+    source_html_snippet = models.TextField(blank=True)
+    target_html_snippet = models.TextField(blank=True)
 
 
 class Paragraph(models.Model):

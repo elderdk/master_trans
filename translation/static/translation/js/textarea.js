@@ -30,25 +30,6 @@ function send_commit(commit_url, csrf_token, text, e){
   xhr.send(text);
 }
 
-function retrieve_match(search_url, seg_id) {
-
-  var xhr = new XMLHttpRequest();
-
-  xhr.onreadystatechange = function() {
-    if (xhr.readyState === 4) {
-      update_search_result(xhr.response);
-    }
-  }
-
-  xhr.open("GET", search_url, true);
-  xhr.send(seg_id);
-}
-
-function update_search_result(htmlSnippet) {
-  const search_result_span = document.querySelector('#search_result')
-  search_result_span.innerHTML = htmlSnippet
-}
-
 function update_status(status_text, e) {
   status_tag = e.target.parentNode.previousElementSibling
   status_tag.innerHTML = status_text

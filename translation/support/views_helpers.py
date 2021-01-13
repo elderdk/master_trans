@@ -8,7 +8,6 @@ from ..helpers import (
     )
 
 
-
 def set_status(projectfile, commit_token):
 
     project = projectfile.project
@@ -48,8 +47,12 @@ class DiffView:
         return self.short_distance_seg is None
 
     @property
-    def html_snippet(self):
-        return self.short_distance_seg.html_snippet
+    def source_html_snippet(self):
+        return self.short_distance_seg.source_html_snippet
+
+    @property
+    def target_html_snippet(self):
+        return self.short_distance_seg.target_html_snippet
 
     @property
     def has_no_short_distance_seg_attr(self):

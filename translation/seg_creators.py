@@ -42,7 +42,8 @@ class CreateSegment:
                     distance=Levenshtein.ratio(
                                             short_seg.db_seg_text, seg.source
                                             ),
-                    html_snippet=make_html(short_seg.db_seg_text, seg.source)
+                    source_html_snippet=make_html(short_seg.db_seg_text, seg.source),
+                    target_html_snippet="<span>"+short_seg.db_target_text+"</span>"
                 )
             except ValueError:
                 pass
