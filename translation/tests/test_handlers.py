@@ -29,8 +29,23 @@ class ProjectFileTest(TestCase):
             project=cls.project
         )
 
-    def test_project_model(self):
-        self.assertEqual(self.project.name, 'testProject')
+    def test_docx_parsing(self):
+        docx_file = Path('./translation/tests/test_docx_file.docx')
 
-    def test_parser_model(self):
-        self.assertEqual(self.parser.project, self.project)
+        pf = ProjectFile.objects.create(
+                name='test_docx_file',
+                project=self.project,
+                file=SimpleUploadedFile(
+                    'test_docx_file.docx', docx_file.read_bytes()
+                    )
+            )
+
+        with self.settings(DEBUG=True):
+            creator = DocxSegmentCreator(pf, self.parser)
+            creator.create_segments()
+
+        self.assertTrue(Segment.objects.filter(file=pf).count() == 11)
+        self.assertEqual(
+            Segment.objects.filter(file=pf).first().source,
+            "This is the first paragraph."
+        )

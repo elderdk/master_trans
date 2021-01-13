@@ -13,5 +13,3 @@ class DocxGenerator(TargetGenerator):
 
     def __init__(self, pf):
         self.projectfile = pf
-    
-    

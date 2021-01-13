@@ -135,7 +135,7 @@ class DocxSegmentCreator:
                 result.append(para_tuple)
 
         self.pf.processed_soup = str(self.soup)
-        
+
         self.pf.save()
 
         return result

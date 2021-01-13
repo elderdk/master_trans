@@ -8,7 +8,7 @@ import boto3
 from bs4 import Tag as SoupTag
 from django.db.models import Q
 from django.conf import settings
-from django.http import FileResponse, HttpResponse
+from django.http import FileResponse
 
 from translation.models import Paragraph, Segment
 
@@ -159,7 +159,7 @@ class DocxGenerator(TargetGenerator):
                 'Key': source_path
             }
             s3.meta.client.copy(copy_source, bucket, new_file)
-        
+
         return new_file
 
     def insert_xml_to_docx(self, original_file, source_xml):

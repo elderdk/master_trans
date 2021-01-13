@@ -6,8 +6,6 @@ import Levenshtein
 from django.conf import settings
 from bs4 import Tag, NavigableString
 
-from django.conf import settings
-
 
 SEGMENT_MATCH_THRESH = 0.7
 FILE_NOT_SUPPORTED_MSG = (
@@ -75,7 +73,7 @@ def get_ext(fi):
 
 
 def get_docu_xml(file_list):
-    pattern = re.compile('word/document\d?\.xml')
+    pattern = re.compile(r'word/document\d?\.xml')
     for fi in file_list:
         if re.match(pattern, fi):
             return fi

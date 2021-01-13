@@ -5,6 +5,7 @@ from .models import Segment, ProjectFile, ShortDistanceSegment
 from .helpers import shortest_dist, make_html, get_ext
 
 from .handlers.parse_docx import DocxSegmentCreator
+from .handlers.parse_txt import TextSegmentCreator
 
 
 def create_file_and_segments(parser, fi_list, project_obj):
@@ -42,8 +43,12 @@ class CreateSegment:
                     distance=Levenshtein.ratio(
                                             short_seg.db_seg_text, seg.source
                                             ),
-                    source_html_snippet=make_html(short_seg.db_seg_text, seg.source),
-                    target_html_snippet="<span>"+short_seg.db_target_text+"</span>"
+                    source_html_snippet=make_html(
+                        short_seg.db_seg_text, seg.source
+                        ),
+                    target_html_snippet=(
+                        "<span>"+short_seg.db_target_text+"</span>"
+                        )
                 )
             except ValueError:
                 pass
@@ -56,23 +61,3 @@ class CreateSegment:
         }
 
         return ext_dict.get(self.ext)
-
-
-class TextSegmentCreator:
-    def __init__(self, projectfile, parser):
-        self.pf = projectfile
-        self.parser = parser
-
-    def create_segments(self):
-        pf = self.pf
-        parser = self.parser
-        with pf.file.open(mode='r') as f:
-            regex = re.compile(parser.full_regex, flags=re.UNICODE)
-            sentences = regex.split(f.read())
-
-            for num, sentence in enumerate(sentences, start=1):
-                Segment.objects.create(
-                    file=pf,
-                    source=sentence,
-                    seg_id=num
-                )
