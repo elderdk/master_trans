@@ -8,6 +8,11 @@
               <button type="button" class="btn btn-success btn-sm">New Project</button>
             </a>
           </div>
+          <div class="btn-group float-right" role="group">
+            <a href={% url "project-delete-all" %}>
+              <button type="button" class="btn btn-success btn-sm">Delete All</button>
+            </a>
+          </div>
         </div>
     </div>
     {% for project in projects %}
