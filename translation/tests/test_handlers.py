@@ -3,6 +3,7 @@ from ..models import Project, ProjectFile, SentenceParser, Segment
 from users.models import User
 from pathlib import Path
 from translation.handlers.parse_docx import DocxSegmentCreator
+from translation.handlers.parse_txt import TextSegmentCreator
 from django.core.files.uploadedfile import SimpleUploadedFile
 
 # Create your tests here.
@@ -49,3 +50,20 @@ class ProjectFileTest(TestCase):
             Segment.objects.filter(file=pf).first().source,
             "This is the first paragraph."
         )
+
+    def test_txt_parsing(self):
+        test_txt_file = Path('./translation/tests/test_txt_file.txt')
+
+        pf = ProjectFile.objects.create(
+                name='test_txt_file',
+                project=self.project,
+                file=SimpleUploadedFile(
+                    'test_txt_file.docx', test_txt_file.read_bytes()
+                    )
+            )
+
+        with self.settings(DEBUG=True):
+            creator = TextSegmentCreator(pf, self.parser)
+            creator.create_segments()
+
+        self.assertTrue(Segment.objects.filter(file=pf).count() == 210)

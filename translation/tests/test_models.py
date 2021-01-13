@@ -1,13 +1,9 @@
 from django.test import TestCase
-from ..models import Project, ProjectFile, SentenceParser, Segment
+from ..models import Project, SentenceParser
 from users.models import User
-from pathlib import Path
-from translation.handlers.parse_docx import DocxSegmentCreator
-from django.core.files.uploadedfile import SimpleUploadedFile
+
 
 # Create your tests here.
-
-
 class ProjectFileTest(TestCase):
 
     @classmethod
